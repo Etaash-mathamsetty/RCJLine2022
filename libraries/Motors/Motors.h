@@ -1,3 +1,9 @@
+#define PORT1 0
+#define PORT2 1
+#define PORT3 2
+#define PORT4 3
+
+
 struct motor_pins{
   uint8_t h1;
   uint8_t h2;
