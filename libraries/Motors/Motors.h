@@ -1,7 +1,7 @@
-#define PORT1 0
-#define PORT2 1
-#define PORT3 2
-#define PORT4 3
+#define MPORT1 0
+#define MPORT2 1
+#define MPORT3 2
+#define MPORT4 3
 
 
 struct motor_pins{

@@ -1,7 +1,7 @@
 #include "Motors.h"
 
-Motor motor(PORT1);
-Motor motor2(PORT2);
+Motor motor(MPORT1);
+Motor motor2(MPORT2);
 
 void setup() {
   // put your setup code here, to run once:
