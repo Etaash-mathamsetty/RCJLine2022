@@ -119,6 +119,9 @@ class Motor{
     return ticks[port];
   }
 
+  void resetTicks(){
+  	ticks[port] = 0;
+  }
   //int& mticks;
   
   int port;
