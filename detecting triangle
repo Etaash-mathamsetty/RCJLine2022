@@ -1,18 +1,14 @@
-//doesn't even work but sometimes its about sending a messsage 
+/* This example shows how to use continuous mode to take
+range measurements with the VL53L0X. It is based on
+vl53l0x_ContinuousRanging_Example.c from the VL53L0X API.
 
+The range readings are in units of mm. */
 
 #include <Wire.h>
-#include "Adafruit_TCS34725.h"  
-#include <VL53L0X.h> 
-#include <Adafruit_Sensor.h>
-#include "MeMegaPi.h"
-MeMegaPiDCMotor motor3(PORT4B);
-MeMegaPiDCMotor motor1(PORT1B);
-MeMegaPiDCMotor motor2(PORT3B);
+#include "Adafruit_TCS34725.h"
+#include <Wire.h>
+#include <VL53L0X.h>
 
-uint8_t motorSpeed = 100; 
-
-volatile int Enc3 = 0, Enc1 = 0, Enc2 = 0; 
 VL53L0X sensor;
 int tofports[] = { 0 , 1 };
 void tcaselect(uint8_t i) {
@@ -24,230 +20,91 @@ void tcaselect(uint8_t i) {
 }
 
 
-Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
-void Encoder3()
+void setup()
 {
-  Enc3++;
-}
-void Encoder2()
-{
-  Enc2++;
-}
-void Encoder1()
-{
-  Enc1++;
-}
 
-void Raise(int b)
-{
-  Enc3 = 0;
-  while (Enc3< b) {
-
-    motor3.run(motorSpeed);
-
-  } 
-  motor3.stop(); 
-  return;
-
-}
-
-void Lower(int a)
-{
-  Enc3= 0; 
-  while (Enc3< a) {
-
-
-    motor3.run(-motorSpeed);
-
-
-  } 
-  motor3.stop(); 
-  return;
-}
-
-void Forward(int c)  
-{
-  Enc1 = 0; 
-  Enc2 = 0; 
-  while (Enc1 < c) {
-
-
-    motor1.run(motorSpeed);
-    motor2.run(-motorSpeed);
- 
-
-  }  
-  motor1.stop(); 
-  motor2.stop(); 
-  return;
-
-
-
-  
-}
-
-void Backwards(int c)  
-{
-  Enc1 = 0; 
-  Enc2 = 0; 
-  while (Enc1 < c) {
-
-
-    motor1.run(-motorSpeed);
-    motor2.run(motorSpeed);
- 
-
-  }  
-  motor1.stop(); 
-   motor2.stop(); 
-  return;
-
-
-
-  
-}
-void TurnL(int c)  
-{
-  Enc1 = 0; 
-  Enc2 = 0;  
-  c =  c * 10;
-  while (Enc1 < c) {
-
-
-    motor1.run(-motorSpeed);
-    motor2.run(-motorSpeed);
- 
-
-  }  
-  motor1.stop(); 
-  motor2.stop(); 
-  return;
-
-
-
-  
-}
-
-void TurnR(int c)  
-{
-  Enc1 = 0; 
-  Enc2 = 0;  
-  c = c * 10; 
-  while (Enc1 < c) {
-
-
-    motor1.run(motorSpeed);
-    motor2.run(motorSpeed);
- 
-
-  }  
-  motor1.stop(); 
-   motor2.stop(); 
-  return;
-
-
-
-  
-}
-void setup() {  
-  int err; 
+  int i; 
   Serial.begin(9600);
- 
-  // MOTORS 
-  attachInterrupt(digitalPinToInterrupt(2), Encoder3, CHANGE); 
-  attachInterrupt (digitalPinToInterrupt(18), Encoder1, CHANGE);  
-  attachInterrupt (digitalPinToInterrupt(3), Encoder2, CHANGE);  
-
-
-  // SENSORS 
-  for (int port : tofports) {
-
-  tcaselect(port); 
-
-
-    if (!sensor.init())
-    {
-      Serial.println("Failed to detect and initialize sensor!");
-      while (1) {}
-    }
-
-    sensor.startContinuous();
+  Wire.begin();  
   
-
-}
-
-void loop() {
-
- 
-  for(int port: tofports){
-
-
-  tcaselect(port); 
-  
-  
-  Serial.print("TOF"); 
-  
-  Serial.println(port); 
-  Serial.println(sensor.readRangeContinuousMillimeters());  
-  
+  for(i = 0; i <= 1; i++)  {
+  tcaselect(i); 
+  sensor.setTimeout(500);
+  if (!sensor.init())
+  {
+    Serial.println("Failed to detect and initialize sensor!");
+    while (1) {}
   }
 
+  // Start continuous back-to-back mode (take readings as
+  // fast as possible).  To use continuous timed mode
+  // instead, provide a desired inter-measurement period in
+  // ms (e.g. sensor.startContinuous(100)).
+  sensor.startContinuous(); 
+  }
+}
+
+void loop()
+{ 
+  
+  triangleDETECT(); 
+  /*int i; 
+  for(i = 0; i <= 1; i++){ 
+  tcaselect(i);
+  Serial.print(sensor.readRangeContinuousMillimeters());
+ 
+
+  Serial.println(); 
+  } */ 
+} 
+int triangleDETECT() {
+  //x = the differnce betweeen the location of the top and the bottom
+  int tof1, tof2, keydifference;
+
+  tcaselect(0);
+  tof1 = sensor.readRangeContinuousMillimeters();
+  tcaselect(1);
+  tof2 = sensor.readRangeContinuousMillimeters();
+
+
+  keydifference = tof1 - (tof2 - 150) - ((tof2 - 250)/10)    ;
+
+
   
 
+  Serial.println(keydifference); 
+  if(keydifference >= 40){ 
+
+    Serial.println("triangle1"); 
+    
+  } 
+  else if(keydifference <= -10){ 
+
+    Serial.println("triangle2"); 
+    
+  } 
+  else 
+    Serial.println("flat wall"); 
   delay(100); 
-/* 
-
-z = triangleDETECT(); 
-
-if(z == 1) {
-
-case where the triangle is in the top left corner 
-
-}
-else if(z == 3) { 
-
-case where the tirangle is the the bottom right corner 
-
-}
-else 
-
-case where the triangle is in the top right corner 
 
 
- */
+/*
+  if (keydifference > 50) {
 
+    return 1; 
 
+  }
+  else if (keydifference < -50) {
 
-}  
+    return 3;
 
-
-
-int triangleDETECT() { 
-//x = the differnce betweeen the location of the top and the bottom 
-int tof1, tof2, keydifference; 
-
- tcaselect(1); 
-tof1 = sensor.readRangeContinuousMillimeters(); 
- tcaselect(2); 
-tof2 = sensor.readRangeContinuousMillimeters(); 
-
-
-keydifference = tof1 - (tof2 - 100);  
-
-if(keydifference > 50){ 
-
-return 1; 
+  }
+  else  {
+   return 2;  
+   */
+   // TurnR(90);
+   // if (tof1 <= 20)
+    //  TurnL(180);
+    // thjis is so that if it faces a wall its not a problem
   
-}
-else if (keydifference < -50){ 
-
-return 3; 
-  
-}
-else 
-
-turnR(90);  
-if(tof1 <= 20) 
-turnL(180); 
-// thjis is so that if it faces a wall its not a problem 
 }
