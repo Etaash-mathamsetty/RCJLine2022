@@ -20,7 +20,7 @@ void move(int rightSpeed, int leftSpeed) {
   motor2.run(leftSpeed);
 }
 
-void stopMotor() {
+void stopMotors() {
   motor.stop();
   motor2.stop();
 }
@@ -86,6 +86,6 @@ void loop() {
         move(-80, 80);
       }
     }
-    stopMotor();
+    stopMotors();
   }
 }
