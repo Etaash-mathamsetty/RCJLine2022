@@ -27,12 +27,14 @@ class turnMotor {
             while (orientationData.orientation.x <= 360) {
                 bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
                 Serial.println(orientationData.orientation.x);
-                move(-speed, speed);
+                motor1.run(speed);
+                motor2.run(speed);
             }
             while (orientationData.orientation.x < angle - (360 - orient_before) {
                 bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
                 Serial.println(orientationData.orientation.x);
-                move(-speed, speed);
+                motor1.run(speed);
+                motor2.run(speed);
             }
 
         }
@@ -40,7 +42,8 @@ class turnMotor {
             while (orientationData.orientation.x < orient_before + angle) {
                 bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
                 Serial.println(orientationData.orientation.x);
-                move(-speed, speed);
+                motor1.run(speed);
+                motor2.run(speed);
             }
         }
         stopMotor();
@@ -54,12 +57,14 @@ class turnMotor {
             while (orientationData.orientation.x >= 0) {
                 bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
                 Serial.println(orientationData.orientation.x);
-                move(speed, -speed);
+                motor1.run(-speed);
+                motor2.run(-speed);
             }
             while (orientationData.orientation.x > 360 - (angle - orient_before)){
                 bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
                 Serial.println(orientationData.orientation.x);
-                move(speed, -speed);
+                motor1.run(-speed);
+                motor2.run(-speed);
             }
 
         }
@@ -67,7 +72,8 @@ class turnMotor {
             while (orientationData.orientation.x > orient_before - angle) {
                 bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
                 Serial.println(orientationData.orientation.x);
-                move(speed, -speed);
+                motor1.run(-speed);
+                motor2.run(-speed);
             }
         }
         stopMotor();
