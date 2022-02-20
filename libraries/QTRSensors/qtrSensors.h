@@ -19,6 +19,14 @@ public:
 		this->max_time = _max_time;
 		this->length = _length;
 	}
+	
+	void addoffvalues(const int* off){
+		memcpy(this->OffValues, off, length * sizeof(off[0]));
+	}
+	
+	int* getOffValues(){
+		return OffValues;
+	}
 
 	void calibrate(void (*sig_func )(bool)) {
 		this->Update();
