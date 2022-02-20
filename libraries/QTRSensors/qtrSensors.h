@@ -20,7 +20,7 @@ public:
 		this->length = _length;
 	}
 	
-	void addoffvalues(const int* off){
+	void addOffValues(const int* off){
 		memcpy(this->OffValues, off, length * sizeof(off[0]));
 	}
 	
