@@ -21,13 +21,7 @@ void right(int angle, int speed) {
 
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   int goal = (int)(orientationData.orientation.x + angle);
-
   orient = orientationData.orientation.x > angle + (goal - 360) ?  orientationData.orientation.x - 360 : orientationData.orientation.x ;
-
-  Serial.print("Goal: ");
-  Serial.println(goal);
-  Serial.print("Orientation: ");
-  Serial.println(orient);
 
   if (goal > 360) {
 
@@ -36,8 +30,6 @@ void right(int angle, int speed) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       orient = orientationData.orientation.x > angle + goal ?  orientationData.orientation.x - 360 : orientationData.orientation.x ;
       //Serial.println(orient);
-      Serial.println(goal);
-      Serial.println(orient);
       motor.run(speed);
       motor2.run(speed);
     }
@@ -46,7 +38,6 @@ void right(int angle, int speed) {
   else {
     while ((int)orientationData.orientation.x  < goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      // Serial.println(orientationData.orientation.x);
       motor.run(speed);
       motor2.run(speed);
     }
@@ -62,11 +53,6 @@ void left(int angle, int speed) {
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   int goal = (int)(orientationData.orientation.x - angle);
   orientation = orientationData.orientation.x < goal + 360 - angle?  orientationData.orientation.x + 360: orientationData.orientation.x;
-  
-  Serial.print("Goal: ");
-  Serial.println(goal);
-  Serial.print("Orientation: ");
-  Serial.println(orientation);
 
   if (goal < 0) {
 
@@ -75,8 +61,6 @@ void left(int angle, int speed) {
     while (orientation > goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       orientation = orientationData.orientation.x < goal - angle?  orientationData.orientation.x + 360 : orientationData.orientation.x;
-      Serial.println(goal);
-      Serial.println(orientation);
       motor.run(-speed);
       motor2.run(-speed);
 
@@ -84,6 +68,7 @@ void left(int angle, int speed) {
   }
 
   else {
+    
     while ((int)orientationData.orientation.x  > goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       motor.run(-speed);
@@ -121,18 +106,34 @@ void setup() {
 }
 
 void loop() {
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
- // Serial.println(orientationData.orientation.x);
 
- if(sensor.readRangeContinuousMillimeters() < 200){
+  float distance;
+  float Kp = 0.28;
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+  while((distance = sensor.readRangeContinuousMillimeters()) > 200);
+    Serial.println(sensor.readRangeContinuousMillimeters());
     left(90, 100);
     delay(500);
- 
- }
- if(sensor.readRangeContinuousMillimeters() < 200){
+    Serial.println(sensor.readRangeContinuousMillimeters());
+  if(sensor.readRangeContinuousMillimeters() < 200){
     left(180,100);
     delay(500);
+    while(true){
+
+      motor.run(100 - distance * Kp);
+      motor2.run(-100 - distance * Kp);
+    
+    }
+  }
+  else{
+     while(true){
+
+      motor.run(100 + distance * Kp);
+      motor2.run(-100 + distance * Kp);
+    
+    }
+    
  }
-
-
+    while(true);
 }
