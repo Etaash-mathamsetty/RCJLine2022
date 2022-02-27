@@ -37,6 +37,20 @@ void avoid_obs(){
   
 }
 
+#define MUXADDR 0x70
+
+void selectI2CChannels(uint8_t i) {
+
+if (i > 7) return;
+
+Wire.beginTransmission(MUXADDR);
+
+Wire.write(1 << i);
+
+Wire.endTransmission();
+
+}
+
 int prev_error = 0;
 
 void check_lr_intersection(bool* left, bool* right){
@@ -160,6 +174,43 @@ void right90(bool skip = false){
   }
 }
 
+void green90l(){
+  motor2.resetTicks();
+  //forward
+  while(motor2.getTicks() <= 300){
+    motor1.run(-100);
+    motor2.run(100);
+  }
+
+   while(linedetect()){
+    motor1.run(-100);
+    motor2.run(-100);
+  }
+  while(!linedetect()){
+    motor1.run(-100);
+    motor2.run(-100);
+  }
+  
+}
+
+void green90r(){
+   motor2.resetTicks();
+  //forward
+  while(motor2.getTicks() <= 300){
+    motor1.run(-100);
+    motor2.run(100);
+  }
+
+  while(linedetect()){
+    motor1.run(100);
+    motor2.run(100);
+  }
+  while(!linedetect()){
+    motor1.run(100);
+    motor2.run(100);
+  }
+}
+
 void trace_line(){
   qtr.Update();
   bool right = false, left = false;
@@ -167,8 +218,8 @@ void trace_line(){
   int32_t line = qtr.get_line();
   line -= 3500;
   //hack to improve line tracing
-  const float boost = 0.1f;
-  if(abs(line) > 2500){
+  const float boost = 0.12f;
+  if(abs(line) > 2000){
     kp = boost;
   }
   int error = (kp * line);
@@ -229,10 +280,23 @@ void lcd_display_qtr(){
   //delay(150);
 }
 
+void func(bool x){
+  if(x == true){
+    Serial.println("white cal");
+  }
+  if(x == false){
+    Serial.println("black cal");
+  }
+}
+
 void setup() {
   // put your setup code here, to run once:
-  Wire.begin();
+    Wire.begin();
   Serial.begin(9600);
+//  qtr.calibrate(func);
+  //for(int i = 0; i < SensorCount; i++)
+  //Serial.println(qtr.getOffValues()[i]);
+  qtr.addOffValues((const int[]){-37,47,47,47,47,7,-37,-121});
   lcd.init();
   lcd.backlight();
   lcd.setCursor(3,0);
@@ -251,6 +315,12 @@ void loop() {
 
 //SerialPrintf("dist %d\n",tof.readRangeContinuousMillimeters());
   trace_line();
+
+  for(int i = 0; i < SensorCount; i++){
+    Serial.print(qtr[i]);
+    Serial.print('\t');
+  }
+  Serial.println();
   //Serial.println(motor2.getTicks());
  // qtr.Update();
   //Serial.println(linedetect());
