@@ -194,8 +194,11 @@ int CheckWall() {
 }
 
 
-void HorzCase()
+void HorzCase() { 
+  //stub 
+}
 
-
-
-void VertCase()
+void VertCase()  {
+  //stub 
+  
+}
