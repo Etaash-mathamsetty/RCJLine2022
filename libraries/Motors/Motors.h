@@ -130,4 +130,4 @@ class Motor{
   static inline int ticks[4] = {0};
   static inline bool dir[4] = {true};
 };
-#endif _MOTORS_H_
+#endif
