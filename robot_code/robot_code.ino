@@ -8,6 +8,7 @@
 #include "Adafruit_TCS34725.h"
 //#define MotorsOff
 #include "Motors.h"
+#include "utils.h"
 
 //#define LINEOFF
 const int white_val = 150;
@@ -98,7 +99,7 @@ void check_lr_intersection(bool* left, bool* right) {
 }
 
 bool linedetect() {
-  const float thresh = 400;
+  const float thresh = 380;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++) {
     if (qtr[i] > thresh) {
@@ -190,7 +191,7 @@ void trace_line() {
   line -= 3500;
   //hack to improve line tracing
   const float boost = 0.12f;
-  if (abs(line) > 2000) {
+  if (abs(line) > 2500) {
     kp = boost;
   }
   else{
@@ -252,6 +253,15 @@ void lcd_display_qtr() {
     lcd.print(',');
   }
   //delay(150);
+}
+
+void func(bool x) {
+  if (x == true) {
+    Serial.println("white cal");
+  }
+  if (x == false) {
+    Serial.println("black cal");
+  }
 }
 
 void stopMotor() {
@@ -346,6 +356,10 @@ right(90,100);
 
 }
 
+void green180(){
+  //stub
+}
+
 void setup() {
   // put your setup code here, to run once:
   Wire.begin();
@@ -374,6 +388,7 @@ void setup() {
   if(!tcs.begin()){
     Serial.println("error!");
   }
+  utils::setMotors(&motor1,&motor2);
 }
 
 void print_color(float r, float g, float b){
@@ -387,7 +402,7 @@ void print_color(float r, float g, float b){
 void loop() {
 
   float distance;
-  float Kp = 0.30;
+  float Kp = 0.45;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   // put your main code here, to run repeatedly:
   //  if(tof.readRangeContinuousMillimeters() < 200){
@@ -403,28 +418,48 @@ void loop() {
   }
   Serial.println();
   tcaselect(1);
-  if ((distance = tof.readRangeContinuousMillimeters()) < 190) {
+  if ((distance = tof.readRangeContinuousMillimeters()) < 170) {
     Serial.println(tof.readRangeContinuousMillimeters());
     left(90, 100);
     delay(500);
     Serial.println(tof.readRangeContinuousMillimeters());
-    if (tof.readRangeContinuousMillimeters() < 190) {
+    if (tof.readRangeContinuousMillimeters() < 200) {
       left(180, 100);
       delay(500);
-      while (true) {
+
+      motor2.run(100 - distance * Kp);
+      motor1.run(-100 - distance * Kp);
+      delay(3000);
+      
+      while (!linedetect()) {
 
         motor2.run(100 - distance * Kp);
         motor1.run(-100 - distance * Kp);
 
       }
+
+     utils::forward(70);
+     delay(500);
+     
+     right(90,70);
     }
     else {
-      while (true) {
+
+        motor2.run(100 + distance * Kp);
+        motor1.run(-100 + distance * Kp);
+        delay(3000);
+      
+      while (!linedetect()) {
 
         motor2.run(100 + distance * Kp);
         motor1.run(-100 + distance * Kp);
 
       }
+
+      utils::forward(70);
+      delay(500);
+      
+      left(90,70);
     }
   }
 
@@ -434,7 +469,7 @@ void loop() {
   tcs.getRGB(&r,&g,&b);
   tcs.setInterrupt(!false);
   bool gleft = false, gright = false;
-  if(g >= 100){
+  if(g >= 100 && r < 100 && b < 100){
     gleft = true;
   }
   print_color(r,g,b);
@@ -443,12 +478,13 @@ void loop() {
   tcs.getRGB(&r,&g,&b);
     tcs.setInterrupt(!false);
   print_color(r,g,b);
-  if(g >= 100){
+  if(g >= 100 && r < 100 && b < 100){
     gright = true;
   }
   
   if(gleft && gright){
     //turn around
+    green180();
   }
   else if(gleft){
     green90l();
