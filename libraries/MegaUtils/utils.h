@@ -14,7 +14,7 @@ void setMotors(Motor& _motor1, Motor& _motor2){
 	motor2 = _motor2;
 }
 
-void move(int rightSpeed, int leftSpeed) {
+void forward(int rightSpeed, int leftSpeed) {
   motor.run(-rightSpeed);
   motor2.run(leftSpeed);
 }
@@ -22,14 +22,6 @@ void move(int rightSpeed, int leftSpeed) {
 void stopMotors(){
 	motor.stop();
 	motor2.stop();
-}
-
-void tcaselect(uint8_t i) {
-  if (i > 7) return;
-
-  Wire.beginTransmission(MUXADDR);
-  Wire.write(1 << i);
-  Wire.endTransmission();
 }
 
 };
