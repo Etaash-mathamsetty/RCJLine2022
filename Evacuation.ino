@@ -112,18 +112,42 @@ int case = 0, tri;
     // triangle in far corner case
 
     else {
+      TurnR(90);
+      if (tof1 <= 300) {
+        TurnL(180);
+      }
+      Forward(75 ? cm);
+      if (CheckWall() == 2)  {
+      case = 6;  // nah but it could also be 8, so maybe I might need to add like 4 more cases to reflec that fact ...
+        TurnL(90);
+        VertCase();
+      }
+      else {
+        TurnL(90);
+        if (CheckWall() == 2) {
+        case = 5;
+          TurnL(90);
+          HorzCase();
+        }
+        else {
+          TurnR(90);
+          Backwards(however many cm);
+          TurnR(90);
+          Forwards( however many cm); // the thing is I dont know. Could need to radically alter code
+          if (CheckWall() == 2) {
+          case = 1 ;
+            TurnL(90);
+            HorzCase();
 
-
-
-
+          }
+          else {
+          case = 2;
+            VertCase();
+          }
+        }
+      }
     }
-
-
-
-
-
   }
-
 }
 int triangleDETECT() {
   //x = the differnce betweeen the location of the top and the bottom
