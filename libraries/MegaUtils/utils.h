@@ -2,7 +2,7 @@
 //untested and written in a text editor lmao
 #include "Motors.h"
 
-#define MUXADDR 0x70
+//#define MUXADDR 0x70
 
 namespace utils{
 
