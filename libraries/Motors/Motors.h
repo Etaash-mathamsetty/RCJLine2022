@@ -1,3 +1,5 @@
+#ifndef _MOTORS_H_
+#define _MOTORS_H_
 #define MPORT1 0
 #define MPORT2 1
 #define MPORT3 2
@@ -128,3 +130,4 @@ class Motor{
   static inline int ticks[4] = {0};
   static inline bool dir[4] = {true};
 };
+#endif _MOTORS_H_
