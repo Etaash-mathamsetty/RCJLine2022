@@ -255,15 +255,6 @@ void lcd_display_qtr() {
   //delay(150);
 }
 
-void func(bool x) {
-  if (x == true) {
-    Serial.println("white cal");
-  }
-  if (x == false) {
-    Serial.println("black cal");
-  }
-}
-
 void stopMotor() {
   motor1.stop();
   motor2.stop();
