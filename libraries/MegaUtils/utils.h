@@ -18,6 +18,10 @@ void forward(int rightSpeed, int leftSpeed) {
   motor->run(-rightSpeed);
   motor2->run(leftSpeed);
 }
+	
+void forward(int speed){
+  forward(speed,speed);	
+}
 
 void stopMotors(){
 	motor->stop();
