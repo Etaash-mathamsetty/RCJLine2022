@@ -39,10 +39,7 @@ const int base_speed = 80;
     Serial.print(str); \
     delete str; \
   }
-void avoid_obs() {
 
-
-}
 
 #define MUXADDR 0x70
 
@@ -339,14 +336,15 @@ void green90l() {
   motor2.resetTicks();
   //forward    
   bool pls_return = false;
-    while(motor2.getTicks() <= 20){
+    while(motor2.getTicks() <= 15){
     utils::forward(100);
-  }
-  qtr.Update();
+      qtr.Update();
   Serial.println(majority_linedetect());
   if(majority_linedetect() >= 4){
       pls_return = true;
   }
+  }
+
   while (motor2.getTicks() <= 150) {
     utils::forward(100);
   }
@@ -364,7 +362,7 @@ void green90r() {
   motor2.resetTicks();
   //forward
   bool pls_return = false;
-  while(motor2.getTicks() <= 20){
+  while(motor2.getTicks() <= 15){
     utils::forward(100);
     qtr.Update();
     Serial.println(majority_linedetect());
@@ -390,7 +388,12 @@ void green90r() {
 }
 
 void green180() {
-  //stub
+  
+  left(150,100);
+  while(abs((int32_t)qtr.get_line() - 3500) <= 1000){
+    motor1.run(-100);
+    motor2.run(-100);
+  }
 }
 
 void setup() {
