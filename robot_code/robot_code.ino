@@ -110,6 +110,17 @@ bool linedetect() {
   return detect;
 }
 
+int majority_linedetect() {
+  const float thresh = 380;
+  int line = 0;
+  for (int i = 0; i < SensorCount; i++) {
+    if (qtr[i] > thresh) {
+      line++;
+    }
+  }
+  return line;
+}
+
 void right90(bool);
 
 void left90(bool skip = false) {
@@ -194,7 +205,7 @@ void trace_line() {
   if (abs(line) > 2500) {
     kp = boost;
   }
-  else{
+  else {
     kp = 0.07f;
   }
   int error = (kp * line);
@@ -254,6 +265,7 @@ void lcd_display_qtr() {
   }
   //delay(150);
 }
+
 
 void stopMotor() {
   motor1.stop();
@@ -325,29 +337,59 @@ void left(int angle, int speed) {
 
 void green90l() {
   motor2.resetTicks();
-  //forward
-  while (motor2.getTicks() <= 150) {
-    motor1.run(-100);
-    motor2.run(100);
+  //forward    
+  bool pls_return = false;
+    while(motor2.getTicks() <= 20){
+    utils::forward(100);
   }
-
-  left(90,100);
-
+  qtr.Update();
+  Serial.println(majority_linedetect());
+  if(majority_linedetect() >= 4){
+      pls_return = true;
+  }
+  while (motor2.getTicks() <= 150) {
+    utils::forward(100);
+  }
+  if(pls_return){
+    return;
+  }
+  left(60, 100);
+  while(abs((int32_t)qtr.get_line() - 3500) <= 1000 ){
+    motor1.run(-100);
+    motor2.run(-100);
+  }
 }
 
 void green90r() {
   motor2.resetTicks();
   //forward
-  while (motor2.getTicks() <= 150) {
-    motor1.run(-100);
-    motor2.run(100);
+  bool pls_return = false;
+  while(motor2.getTicks() <= 20){
+    utils::forward(100);
+    qtr.Update();
+    Serial.println(majority_linedetect());
+    if(majority_linedetect() >= 4){
+      pls_return = true;
+   }
   }
 
-right(90,100);
+  while (motor2.getTicks() <= 150) {
+    utils::forward(100);
+
+  }
+  if(pls_return){
+    return;
+  }
+  right(60, 100);
+  while(abs((int32_t)qtr.get_line() - 3500) <= 1000){
+    motor1.run(100);
+    motor2.run(100);
+  }
+  //turn 60 then check for line
 
 }
 
-void green180(){
+void green180() {
   //stub
 }
 
@@ -372,17 +414,17 @@ void setup() {
   tof.init();
   tof.startContinuous();
   tcaselect(2);
-  if(!tcs.begin()){
+  if (!tcs.begin()) {
     Serial.println("error first!");
   }
   tcaselect(3);
-  if(!tcs.begin()){
+  if (!tcs.begin()) {
     Serial.println("error!");
   }
-  utils::setMotors(&motor1,&motor2);
+  utils::setMotors(&motor1, &motor2);
 }
 
-void print_color(float r, float g, float b){
+void print_color(float r, float g, float b) {
   Serial.print(r);
   Serial.print('\t');
   Serial.print(g);
@@ -420,8 +462,8 @@ void loop() {
 
       motor2.run(100 - distance * Kp);
       motor1.run(-100 - distance * Kp);
-      delay(3000);
-      
+      delay(2000);
+
       while (!linedetect()) {
 
         motor2.run(100 - distance * Kp);
@@ -429,17 +471,17 @@ void loop() {
 
       }
 
-     utils::forward(70);
-     delay(500);
-     
-     right(90,70);
+      utils::forward(70);
+      delay(500);
+
+      right(45, 70);
     }
     else {
 
-        motor2.run(100 + distance * Kp);
-        motor1.run(-100 + distance * Kp);
-        delay(3000);
-      
+      motor2.run(100 + distance * Kp);
+      motor1.run(-100 + distance * Kp);
+      delay(2000);
+
       while (!linedetect()) {
 
         motor2.run(100 + distance * Kp);
@@ -449,43 +491,44 @@ void loop() {
 
       utils::forward(70);
       delay(500);
-      
-      left(90,70);
+
+      left(45, 70);
     }
   }
 
   tcaselect(2);
-  float r,g,b;
+  float r, g, b;
   tcs.setInterrupt(!true);
-  tcs.getRGB(&r,&g,&b);
+  tcs.getRGB(&r, &g, &b);
   tcs.setInterrupt(!false);
   bool gleft = false, gright = false;
-  if(g >= 100 && r < 100 && b < 100){
+  if (g >= 100 && r < 100 && b < 100) {
     gleft = true;
   }
-  print_color(r,g,b);
+  print_color(r, g, b);
   tcaselect(3);
   tcs.setInterrupt(!true);
-  tcs.getRGB(&r,&g,&b);
-    tcs.setInterrupt(!false);
-  print_color(r,g,b);
-  if(g >= 100 && r < 100 && b < 100){
+  tcs.getRGB(&r, &g, &b);
+  tcs.setInterrupt(!false);
+  print_color(r, g, b);
+
+  if (g >= 100 && r < 100 && b < 100) {
     gright = true;
   }
-  
-  if(gleft && gright){
+
+  if (gleft && gright) {
     //turn around
     green180();
   }
-  else if(gleft){
+  else if (gleft) {
     green90l();
   }
-  else if(gright){
+  else if (gright) {
     green90r();
   }
-//Serial.println(motor2.getTicks());
-// qtr.Update();
-//Serial.println(linedetect());
-// lcd_display_qtr();
+  //Serial.println(motor2.getTicks());
+  // qtr.Update();
+  //Serial.println(linedetect());
+  // lcd_display_qtr();
 
 }
