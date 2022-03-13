@@ -120,21 +120,23 @@ int majority_linedetect() {
 
 void right90(bool);
 
-void left90(bool skip = false) {
+void left90(bool skip = false, int additional = 0) {
   Serial.println("left90");
   motor2.resetTicks();
   while (motor2.getTicks() <= 400 && linedetect() && !skip) {
-    motor1.run(-100);
-    motor2.run(100);
+    utils::forward(100);
     qtr.Update();
     //Serial.println(linedetect());
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
     if (right == true) {
-      right90(true);
+      right90(true, 400 - motor2.getTicks());
       return;
     }
     //recheck intersection while moving forward what you see could change
+  }
+  while(motor2.getTicks() <= additional){
+    utils::forward(100);
   }
   qtr.Update();
   Serial.print("Linedetect: ");
@@ -156,7 +158,7 @@ void left90(bool skip = false) {
 
 }
 
-void right90(bool skip = false) {
+void right90(bool skip = false, int additional = 0) {
   Serial.println("right90");
   motor2.resetTicks();
   while (motor2.getTicks() <= 400 && linedetect() && !skip) {
@@ -166,9 +168,12 @@ void right90(bool skip = false) {
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
     if (left == true) {
-      left90(true);
+      left90(true, 400 - motor2.getTicks());
       return;
     }
+  }
+    while(motor2.getTicks() <= additional){
+    utils::forward(100);
   }
   qtr.Update();
   Serial.print("Linedetect: ");
