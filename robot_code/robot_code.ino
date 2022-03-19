@@ -118,7 +118,7 @@ int majority_linedetect() {
   return line;
 }
 
-void right90(bool);
+void right90(bool, int additional);
 
 void left90(bool skip = false, int additional = 0) {
   Serial.println("left90");
@@ -337,14 +337,46 @@ void left(int angle, int speed) {
   stopMotor();
 }
 
+uint8_t green_detect(){
+    tcaselect(2);
+  float r, g, b;
+  tcs.setInterrupt(!true);
+  tcs.getRGB(&r, &g, &b);
+  tcs.setInterrupt(!false);
+  bool gleft = false, gright = false;
+  if (g >= 100 && r < 100 && b < 100) {
+    gleft = true;
+  }
+  print_color(r, g, b);
+  tcaselect(3);
+  tcs.setInterrupt(false);
+  tcs.getRGB(&r, &g, &b);
+  tcs.setInterrupt(true);
+  print_color(r, g, b);
+
+  if (g >= 100 && r < 100 && b < 100) {
+    gright = true;
+  }
+
+  return (gleft & 0x0F) | (gright & 0xF0);
+}
+
+void green180();
+
 void green90l() {
   motor2.resetTicks();
   //forward    
+  uint8_t double_green = 0;
   bool pls_return = false;
     while(motor2.getTicks() <= 15){
     utils::forward(100);
       qtr.Update();
   Serial.println(majority_linedetect());
+  double_green = green_detect();
+  if(double_green == 0xFF){
+    green180();
+    return;
+  }
   if(majority_linedetect() >= 4){
       pls_return = true;
   }
@@ -366,11 +398,17 @@ void green90l() {
 void green90r() {
   motor2.resetTicks();
   //forward
+  uint8_t double_green = 0;
   bool pls_return = false;
   while(motor2.getTicks() <= 15){
     utils::forward(100);
     qtr.Update();
     Serial.println(majority_linedetect());
+    double_green = green_detect();
+    if(double_green == 0xFF){
+      green180();
+      return;
+    }
     if(majority_linedetect() >= 4){
       pls_return = true;
    }
@@ -515,9 +553,9 @@ void loop() {
   }
   print_color(r, g, b);
   tcaselect(3);
-  tcs.setInterrupt(!true);
+  tcs.setInterrupt(false);
   tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(!false);
+  tcs.setInterrupt(true);
   print_color(r, g, b);
 
   if (g >= 100 && r < 100 && b < 100) {
