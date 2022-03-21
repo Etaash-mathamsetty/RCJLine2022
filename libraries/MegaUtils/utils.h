@@ -29,18 +29,32 @@ void stopMotors(){
 }
 
 namespace logger{
+	
+	void begin(){
+		#ifndef LOGGER_DISABLE
+		Serial.begin(9600);	
+		#endif
+	}
+	
 	void println(){
+		#ifndef LOGGER_DISABLE
 		Serial.println();
+		#endif
+		
 	}
 	
 	template <typename T>
 	void println(T thing){
-		Serial.println(thing);	
+		#ifndef LOGGER_DISABLE
+		Serial.println(thing);
+		#endif
 	}
 	
 	template <typename T>
 	void print(T thing){
+		#ifndef LOGGER_DISABLE
 		Serial.print(thing);	
+		#endif
 	}
 };
 
