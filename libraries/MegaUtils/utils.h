@@ -28,4 +28,20 @@ void stopMotors(){
 	motor2->stop();
 }
 
+namespace logger{
+	void println(){
+		Serial.println();
+	}
+	
+	template <typename T>
+	void println(T thing){
+		Serial.println(thing);	
+	}
+	
+	template <typename T>
+	void print(T thing){
+		Serial.print(thing);	
+	}
+};
+
 };
