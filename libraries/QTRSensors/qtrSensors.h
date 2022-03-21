@@ -101,17 +101,17 @@ public:
 		return get_val(index);
 	}
 	
-	uint32_t get_line() {
-		uint32_t avg = 0;
-		uint32_t sum = 0;
+	int32_t get_line() {
+		int32_t avg = 0;
+		int32_t sum = 0;
 		for (int i = 0; i < this->length; i++) {
-			uint32_t value = this->get_val(i);
+			int32_t value = this->get_val(i);
 			if (value > 50) {
 				avg += value * (i * 1000);
 				sum += value;
 			}
 		}
-		return (uint32_t)(avg / sum);
+		return (int32_t)(avg / sum);
 	}
 private:
 	int* QtrValues;
