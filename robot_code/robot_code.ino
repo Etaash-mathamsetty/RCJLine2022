@@ -358,7 +358,7 @@ uint8_t green_detect(){
     gright = true;
   }
 
-  return (gleft & 0x0F) | (gright & 0xF0);
+  return (uint8_t(gleft * UINT8_MAX) & 0x0F) | (uint8_t(gright * UINT8_MAX) & 0xF0);
 }
 
 void green180();
