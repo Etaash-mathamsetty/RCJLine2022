@@ -27,7 +27,7 @@ sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
 float kp = 0.07f; //some random number for now
-const float kd = 0.07f;
+const float kd = 0.08f;
 const int base_speed = 80;
 
 #define SerialOBJ Serial
@@ -108,7 +108,7 @@ bool linedetect() {
 }
 
 int majority_linedetect() {
-  const float thresh = 380;
+  const float thresh = 420;
   int line = 0;
   for (int i = 0; i < SensorCount; i++) {
     if (qtr[i] > thresh) {
@@ -123,14 +123,14 @@ void right90(bool, int additional);
 void left90(bool skip = false, int additional = 0) {
   Serial.println("left90");
   motor2.resetTicks();
-  while (motor2.getTicks() <= 400 && linedetect() && !skip) {
+  while (motor2.getTicks() <= 150 && linedetect() && !skip) {
     utils::forward(100);
     qtr.Update();
     //Serial.println(linedetect());
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
     if (right == true) {
-      right90(true, 400 - motor2.getTicks());
+      right90(true, 150 - motor2.getTicks());
       return;
     }
     //recheck intersection while moving forward what you see could change
@@ -143,32 +143,38 @@ void left90(bool skip = false, int additional = 0) {
   Serial.println(linedetect());
   if (linedetect())
     return;
-  while (!linedetect()) {
-    motor1.run(-100);
-    motor2.run(-100); //turns lol
-    qtr.Update();
-  }
-  Serial.println((int)qtr.get_line() - 3500);
-  while (abs((int)qtr.get_line() - 3500) > 500) {
-    Serial.println((int)qtr.get_line() - 3500);
+   left(50,100);
+ // Serial.println((int)qtr.get_line() - 3500);
+ qtr.Update();
+ utils::forward(0);
+ delay(100);
+  while (abs(qtr.get_line() - 3500) > 200) {
+    //Serial.println(qtr.get_line() - 3500);
     motor1.run(-100);
     motor2.run(-100);
     qtr.Update();
   }
-
+  //utils::forward(-100);
+    motor1.resetTicks();
+  while(motor1.getTicks() <= 75){
+    utils::forward(-100);
+  }
+  for(int i = 0; i < 200; i++){
+      line_trace();
+  }
 }
 
 void right90(bool skip = false, int additional = 0) {
   Serial.println("right90");
   motor2.resetTicks();
-  while (motor2.getTicks() <= 400 && linedetect() && !skip) {
+  while (motor2.getTicks() <= 150 && linedetect() && !skip) {
     motor1.run(-100);
     motor2.run(100);
     qtr.Update();
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
     if (left == true) {
-      left90(true, 400 - motor2.getTicks());
+      left90(true, 150 - motor2.getTicks());.
       return;
     }
   }
@@ -180,41 +186,51 @@ void right90(bool skip = false, int additional = 0) {
   Serial.println(linedetect());
   if (linedetect())
     return;
-  while (!linedetect()) {
+  right(50,100);
+  //Serial.println((int)qtr.get_line() - 3500);
+  qtr.Update();
+  utils::forward(0);
+  delay(100);
+  while (abs(qtr.get_line() - 3500) > 200) {
+    //Serial.println((int)qtr.get_line() - 3500);
     motor1.run(100);
     motor2.run(100);
     qtr.Update();
   }
-  Serial.println((int)qtr.get_line() - 3500);
-  while (abs((int)qtr.get_line() - 3500) > 500) {
-    Serial.println((int)qtr.get_line() - 3500);
-    motor1.run(100);
-    motor2.run(100);
-    qtr.Update();
+  motor1.resetTicks();
+  while(motor1.getTicks() <= 75){
+    utils::forward(-100);
+  }
+  for(int i = 0; i <200; i++){
+    line_trace();
   }
 }
 
-
-
-void trace_line() {
-  qtr.Update();
-  bool right = false, left = false;
-  check_lr_intersection(&left, &right);
-  int32_t line = qtr.get_line();
+int line_trace(){
+    qtr.Update();
+    int32_t line = qtr.get_line();
   line -= 3500;
   //hack to improve line tracing
-  const float boost = 0.12f;
+  const float boost = 0.30f;
   if (abs(line) > 2500) {
     kp = boost;
   }
   else {
-    kp = 0.07f;
+    kp = 0.08f;
   }
   int error = (kp * line);
 #ifndef LINEOFF
   motor1.run(-base_speed + error + ((error - prev_error) * kd));
   motor2.run(base_speed + error + ((error - prev_error) * kd));
 #endif
+return error;
+}
+
+void trace_line() {
+  qtr.Update();
+  bool right = false, left = false;
+  check_lr_intersection(&left, &right);
+  int error = line_trace();
   lcd.setCursor(0, 0);
   lcd.print(left);
   lcd.print(',');
@@ -227,7 +243,7 @@ void trace_line() {
     //   return;
     // motor1.run(0);
     // motor2.run(0);
-    motor1.stop();
+   motor1.stop();
     motor2.stop();
     //lcd.clear();
     //lcd.setCursor(0,0);
@@ -250,7 +266,7 @@ void trace_line() {
     //lcd.clear();
     //lcd.setCursor(0,0);
     // lcd.print("please! I just wanna go home");
-    left90();
+   left90();
     //delay(3000);
     // motor1.stop();
     // motor2.stop();
@@ -368,8 +384,8 @@ void green90l() {
   //forward    
   uint8_t double_green = 0;
   bool pls_return = false;
-    while(motor2.getTicks() <= 15){
-    utils::forward(100);
+    while(motor2.getTicks() <= 5){
+    utils::forward(80);
       qtr.Update();
   Serial.println(majority_linedetect());
   double_green = green_detect();
@@ -389,9 +405,13 @@ void green90l() {
     return;
   }
   left(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) <= 1000 ){
+  while(abs(qtr.get_line() - 3500) >= 500 ){
+    qtr.Update();
     motor1.run(-100);
     motor2.run(-100);
+  }
+  for(int i = 0; i <200; i++){
+    line_trace();
   }
 }
 
@@ -400,8 +420,8 @@ void green90r() {
   //forward
   uint8_t double_green = 0;
   bool pls_return = false;
-  while(motor2.getTicks() <= 15){
-    utils::forward(100);
+  while(motor2.getTicks() <= 5){
+    utils::forward(80);
     qtr.Update();
     Serial.println(majority_linedetect());
     double_green = green_detect();
@@ -422,18 +442,20 @@ void green90r() {
     return;
   }
   right(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) <= 1000){
+  while(abs(qtr.get_line() - 3500) >= 500){
+    qtr.Update();
     motor1.run(100);
     motor2.run(100);
   }
-  //turn 60 then check for line
-
+  for(int i = 0; i <200; i++){
+    line_trace();
+  }
 }
 
 void green180() {
   
   left(150,100);
-  while(abs((int32_t)qtr.get_line() - 3500) <= 1000){
+  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
     motor1.run(-100);
     motor2.run(-100);
   }
