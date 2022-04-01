@@ -1,3 +1,21 @@
+#include "MeMegaPi.h"  
+#include "Adafruit_TCS34725.h"
+#include <Wire.h>
+#include <VL53L0X.h>  
+
+
+VL53L0X sensor;
+int tofports[] = { 0 , 1, 2 };
+void tcaselect(uint8_t i) {
+  if (i > 7) return;
+
+  Wire.beginTransmission(0x70);
+  Wire.write(1 << i);
+  Wire.endTransmission();
+}
+
+
+
 void setup()
 {
   attachInterrupt(digitalPinToInterrupt(2), Encoder3, CHANGE);
@@ -176,12 +194,12 @@ int case = 0, tri;
 }
 int triangleDETECT() {
   //x = the differnce betweeen the location of the top and the bottom
-  int toffront, tofback, keydifference;
+  int tofright, tofleft, keydifference;
 
   tcaselect(1);
-  toffront = sensor.readRangeContinuousMillimeters();
+  tofright = sensor.readRangeContinuousMillimeters();
   tcaselect(2);
-  tofback = sensor.readRangeContinuousMillimeters();
+  tofleft = sensor.readRangeContinuousMillimeters();
 
   keydifference = tofback - toffront;   
  
@@ -207,14 +225,12 @@ int triangleDETECT() {
 }
 int CheckWall() {
 
-  int tof1, tof2, keydifference;
+  int tofright; 
 
-  tcaselect(0);
-  tof1 = sensor.readRangeContinuousMillimeters();
-  tcaselect(1);
-  tof2 = sensor.readRangeContinuousMillimeters();
+  tcaselect(2);
+  tofright = sensor.readContinousMillimeters(); 
 
-  if (tof1 <= 300)
+  if (tofright <= 300)
     return 1;
 
   else
@@ -225,10 +241,21 @@ int CheckWall() {
 
 
 void HorzCase() { 
-  //stub 
+  int tofscoop;  
+  tcaselect(0); 
+  tofscoop = sensor.readContinousMillimters(); 
+  Lower(3100); 
+  if(tofscoop < 130 ?){ 
+    Forward(250); //to ram the ball in 
+    Backwards(100);  
+    Turn(100, 40, 180); // some type of a drag turn 
+  } 
+  else 
+    Forward(100); 
+  
 }
 
 void VertCase()  {
-  //stub 
+  int tofscoop; 
   
 }
