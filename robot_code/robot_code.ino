@@ -123,14 +123,14 @@ void right90(bool, int additional);
 void left90(bool skip = false, int additional = 0) {
   Serial.println("left90");
   motor2.resetTicks();
-  while (motor2.getTicks() <= 400 && linedetect() && !skip) {
+  while (motor2.getTicks() <= 150 && linedetect() && !skip) {
     utils::forward(100);
     qtr.Update();
     //Serial.println(linedetect());
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
     if (right == true) {
-      right90(true, 400 - motor2.getTicks());
+      right90(true, 150 - motor2.getTicks());
       return;
     }
     //recheck intersection while moving forward what you see could change
@@ -161,14 +161,14 @@ void left90(bool skip = false, int additional = 0) {
 void right90(bool skip = false, int additional = 0) {
   Serial.println("right90");
   motor2.resetTicks();
-  while (motor2.getTicks() <= 400 && linedetect() && !skip) {
+  while (motor2.getTicks() <= 150 && linedetect() && !skip) {
     motor1.run(-100);
     motor2.run(100);
     qtr.Update();
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
     if (left == true) {
-      left90(true, 400 - motor2.getTicks());
+      left90(true, 150 - motor2.getTicks());
       return;
     }
   }
@@ -389,7 +389,7 @@ void green90l() {
     return;
   }
   left(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) <= 1000 ){
+  while(abs((int32_t)qtr.get_line() - 3500) >= 500 ){
     motor1.run(-100);
     motor2.run(-100);
   }
@@ -422,7 +422,7 @@ void green90r() {
     return;
   }
   right(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) <= 1000){
+  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
     motor1.run(100);
     motor2.run(100);
   }
@@ -433,7 +433,7 @@ void green90r() {
 void green180() {
   
   left(150,100);
-  while(abs((int32_t)qtr.get_line() - 3500) <= 1000){
+  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
     motor1.run(-100);
     motor2.run(-100);
   }
