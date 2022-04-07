@@ -368,9 +368,9 @@ void green90l() {
   //forward    
   uint8_t double_green = 0;
   bool pls_return = false;
-    while(motor2.getTicks() <= 15){
-    utils::forward(100);
-      qtr.Update();
+  while(motor2.getTicks() <= 5){
+  utils::forward(80);
+  qtr.Update();
   Serial.println(majority_linedetect());
   double_green = green_detect();
   if(double_green == 0xFF){
@@ -400,18 +400,18 @@ void green90r() {
   //forward
   uint8_t double_green = 0;
   bool pls_return = false;
-  while(motor2.getTicks() <= 15){
-    utils::forward(100);
-    qtr.Update();
-    Serial.println(majority_linedetect());
-    double_green = green_detect();
-    if(double_green == 0xFF){
-      green180();
-      return;
-    }
-    if(majority_linedetect() >= 4){
-      pls_return = true;
-   }
+  while(motor2.getTicks() <= 5){
+  utils::forward(80);
+  qtr.Update();
+  Serial.println(majority_linedetect());
+  double_green = green_detect();
+  if(double_green == 0xFF){
+    green180();
+    return;
+  }
+  if(majority_linedetect() >= 4){
+    pls_return = true;
+  }
   }
 
   while (motor2.getTicks() <= 150) {
