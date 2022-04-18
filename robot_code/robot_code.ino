@@ -9,7 +9,7 @@
 //#define MotorsOff
 #include "Motors.h"
 #include "utils.h"
-
+#define log utils::logger
 //#define LINEOFF
 const int white_val = 150;
 
@@ -21,7 +21,6 @@ QTRSensors qtr((const uint8_t[]) {
 LiquidCrystal_I2C lcd(LCD_ADDR, 20, 4);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
-//Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
 VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
@@ -31,15 +30,6 @@ const float kd = 0.09f;
 const int base_speed = 80;
 
 #define SerialOBJ Serial
-#define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
-#define SerialPrintf(fmt, ...) \
-  {\
-    char* str = new char[strlen(fmt) + NUMARGS(__VA_ARGS__)*40 + 5]; \
-    sprintf(str,fmt, __VA_ARGS__); \
-    Serial.print(str); \
-    delete str; \
-  }
-
 
 #define MUXADDR 0x70
 
@@ -171,7 +161,7 @@ void left90(bool skip = false, int additional = 0) {
     //Serial.println(linedetect());
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
-    if (right == true) {
+    if (right) {
       right90(true, 150 - motor2.getTicks());
       return;
     }
@@ -181,8 +171,8 @@ void left90(bool skip = false, int additional = 0) {
     utils::forward(100);
   }
   qtr.Update();
-  Serial.print("Linedetect: ");
-  Serial.println(linedetect());
+ log::print("Linedetect: ");
+  log::println(linedetect());
   if (linedetect())
     return;
   //while (!linedetect()) {
@@ -208,7 +198,7 @@ void left90(bool skip = false, int additional = 0) {
 }
 
 void right90(bool skip = false, int additional = 0) {
-  Serial.println("right90");
+  log::println("right90");
   motor2.resetTicks();
   while (motor2.getTicks() <= 150 && linedetect() && !skip) {
     motor1.run(-100);
@@ -429,7 +419,7 @@ void green90l() {
   while(motor2.getTicks() <= 5){
   utils::forward(80);
   qtr.Update();
-  Serial.println(majority_linedetect());
+  log::println(majority_linedetect());
   double_green = green_detect();
   if(double_green == 0xFF){
     green180();
@@ -464,7 +454,7 @@ void green90r() {
   while(motor2.getTicks() <= 5){
   utils::forward(80);
   qtr.Update();
-  Serial.println(majority_linedetect());
+  log::println(majority_linedetect());
   double_green = green_detect();
   if(double_green == 0xFF){
     green180();
@@ -502,7 +492,7 @@ void green180() {
 void setup() {
   // put your setup code here, to run once:
   Wire.begin();
-  Serial.begin(9600);
+  log::begin();
   delay(1000);
   motor1.addBoost(20);
   motor2.addBoost(20);
