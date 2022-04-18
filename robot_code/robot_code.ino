@@ -26,8 +26,8 @@ VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
-float kp = 0.07f; //some random number for now
-const float kd = 0.07f;
+float kp = 0.09f; //some random number for now
+const float kd = 0.09f;
 const int base_speed = 80;
 
 #define SerialOBJ Serial
@@ -118,6 +118,48 @@ int majority_linedetect() {
   return line;
 }
 
+void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c){
+  Serial.println("raw color:");
+  Serial.print(r);
+  Serial.print('\t');
+  Serial.print(g);
+  Serial.print('\t');
+  Serial.print(b);
+  Serial.print('\t');
+  Serial.println(c);
+}
+
+bool color_detect_black(){
+  tcaselect(4);
+  uint16_t r, g, b,c;
+  tcs.setInterrupt(false);
+  tcs.getRawData(&r,&g,&b,&c);
+  tcs.setInterrupt(true);
+  print_raw_color(r,g,b,c);
+  //random value right now
+  if(c < 100){
+    return true;
+  }
+  return false;
+}
+
+void turn_left_to_black(){
+  //motor2.resetTicks();
+  while(!color_detect_black()){
+    motor1.run(-100);
+    motor2.run(-100);
+  }
+  utils::stopMotors();
+}
+
+void turn_right_to_black(){
+  while(!color_detect_black()){
+    motor1.run(100);
+    motor2.run(100);
+  }
+  utils::stopMotors();
+}
+
 void right90(bool, int additional);
 
 void left90(bool skip = false, int additional = 0) {
@@ -143,11 +185,17 @@ void left90(bool skip = false, int additional = 0) {
   Serial.println(linedetect());
   if (linedetect())
     return;
-  while (!linedetect()) {
-    motor1.run(-100);
-    motor2.run(-100); //turns lol
-    qtr.Update();
-  }
+  //while (!linedetect()) {
+   // motor1.run(-100);
+   // motor2.run(-100); //turns lol
+   // qtr.Update();
+  //}
+  utils::stopMotors();
+  delay(200);
+  utils::forward(-100);
+  delay(200);
+  utils::stopMotors();
+  /*
   Serial.println((int)qtr.get_line() - 3500);
   while (abs((int)qtr.get_line() - 3500) > 500) {
     Serial.println((int)qtr.get_line() - 3500);
@@ -155,7 +203,8 @@ void left90(bool skip = false, int additional = 0) {
     motor2.run(-100);
     qtr.Update();
   }
-
+*/
+  turn_left_to_black();
 }
 
 void right90(bool skip = false, int additional = 0) {
@@ -180,11 +229,18 @@ void right90(bool skip = false, int additional = 0) {
   Serial.println(linedetect());
   if (linedetect())
     return;
-  while (!linedetect()) {
+  /*while (!linedetect()) {
     motor1.run(100);
     motor2.run(100);
     qtr.Update();
-  }
+  }*/
+  utils::stopMotors();
+  delay(200);
+  utils::forward(-100);
+  delay(200);
+  utils::stopMotors();
+
+  /*
   Serial.println((int)qtr.get_line() - 3500);
   while (abs((int)qtr.get_line() - 3500) > 500) {
     Serial.println((int)qtr.get_line() - 3500);
@@ -192,6 +248,8 @@ void right90(bool skip = false, int additional = 0) {
     motor2.run(100);
     qtr.Update();
   }
+  */
+ turn_right_to_black();
 }
 
 
@@ -388,11 +446,14 @@ void green90l() {
   if(pls_return){
     return;
   }
+  utils::stopMotors();
+  delay(200);
+  utils::forward(-100);
+  delay(150);
+  utils::stopMotors();
   left(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) >= 500 ){
-    motor1.run(-100);
-    motor2.run(-100);
-  }
+
+  turn_left_to_black();
 }
 
 void green90r() {
@@ -421,11 +482,13 @@ void green90r() {
   if(pls_return){
     return;
   }
+  utils::stopMotors();
+  delay(200);
+  utils::forward(-100);
+  delay(150);
+  utils::stopMotors();
   right(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
-    motor1.run(100);
-    motor2.run(100);
-  }
+  turn_right_to_black();
   //turn 60 then check for line
 
 }
@@ -433,10 +496,7 @@ void green90r() {
 void green180() {
   
   left(150,100);
-  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
-    motor1.run(-100);
-    motor2.run(-100);
-  }
+  turn_left_to_black();
 }
 
 void setup() {
@@ -444,6 +504,8 @@ void setup() {
   Wire.begin();
   Serial.begin(9600);
   delay(1000);
+  motor1.addBoost(20);
+  motor2.addBoost(20);
   //  qtr.calibrate(func);
   //for(int i = 0; i < SensorCount; i++)
   //Serial.println(qtr.getOffValues()[i]);
@@ -467,6 +529,10 @@ void setup() {
   if (!tcs.begin()) {
     Serial.println("error!");
   }
+  tcaselect(4);
+  if (!tcs.begin()) {
+    Serial.println("error!");
+  }
   utils::setMotors(&motor1, &motor2);
 }
 
@@ -481,7 +547,7 @@ void print_color(float r, float g, float b) {
 void loop() {
 
   float distance;
-  float Kp = 0.45;
+  const float Kp = 0.45; //nice naming
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   // put your main code here, to run repeatedly:
   //  if(tof.readRangeContinuousMillimeters() < 200){
@@ -490,12 +556,12 @@ void loop() {
 
   //SerialPrintf("dist %d\n",tof.readRangeContinuousMillimeters());
   trace_line();
-
-  for (int i = 0; i < SensorCount; i++) {
+  qtr.Update();
+ for (int i = 0; i < SensorCount; i++) {
     Serial.print(qtr[i]);
     Serial.print('\t');
-  }
-  Serial.println();
+ }
+ Serial.println();
   tcaselect(1);
   if ((distance = tof.readRangeContinuousMillimeters()) < 170) {
     Serial.println(tof.readRangeContinuousMillimeters());
@@ -544,9 +610,9 @@ void loop() {
 
   tcaselect(2);
   float r, g, b;
-  tcs.setInterrupt(!true);
+  tcs.setInterrupt(false);
   tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(!false);
+  tcs.setInterrupt(true);
   bool gleft = false, gright = false;
   if (g >= 100 && r < 100 && b < 100) {
     gleft = true;
