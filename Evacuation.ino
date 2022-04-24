@@ -2,9 +2,19 @@
 #include "Adafruit_TCS34725.h"
 #include <Wire.h>
 #include <VL53L0X.h>  
+#include <Motors.h>
 
 
 VL53L0X sensor;
+Motor motor1(MPORT1); 
+Motor motor2(MPORT2); 
+volatile int Enc1 = 0, Enc2 = 0;
+void Encoder1(){ 
+Enc1++; 
+}
+void Encoder2(){ 
+Enc2++; 
+}
 int tofports[] = { 0 , 1, 2 };
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -12,6 +22,22 @@ void tcaselect(uint8_t i) {
   Wire.beginTransmission(0x70);
   Wire.write(1 << i);
   Wire.endTransmission();
+}
+void Drive(int c, int l, int r)
+{ 
+  Enc1 = 0;
+  Enc2 = 0;
+  while (Enc1 < c && Enc2 < c) {
+
+
+    motor1.run(l);
+
+    motor2.run(-r);
+
+  }
+  motor1.stop(); 
+  motor2.stop(); 
+  return;
 }
 
 
@@ -239,23 +265,27 @@ int CheckWall() {
 
 }
 
-
-void HorzCase() { 
-  int tofscoop;  
-  tcaselect(0); 
-  tofscoop = sensor.readContinousMillimters(); 
-  Lower(3100); 
-  if(tofscoop < 130 ?){ 
-    Forward(250); //to ram the ball in 
-    Backwards(100);  
-    Turn(100, 40, 180); // some type of a drag turn 
-  } 
-  else 
-    Forward(100); 
+void Navigation() { 
+    // put your main code here, to run repeatedly:
+  int spinnumber = 2600; 
+  //will need to implement tof sensor into this, probably not that hard 
+  
+  Drive(2500, 100, 100); 
+  delay(500); 
+  Drive(500, -100, -100); 
+  delay(500); 
+  Drive(spinnumber, 150, 0); 
+  delay(500); 
+  Drive(2500, 100, 100); 
+  delay(500);  
+  Drive(500, -100, -100); 
+  delay(500); 
+  Drive(spinnumber, 0, 150); 
+  delay(500);  
+  
+  
+  //need to figure out how to detect the triangle during the evac movemnts
+  //when trinagle is found, spin the robot around, back up and then dump the balls. 
   
 }
 
-void VertCase()  {
-  int tofscoop; 
-  
-}
