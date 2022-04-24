@@ -98,7 +98,7 @@ bool linedetect() {
 }
 
 int majority_linedetect() {
-  const float thresh = 380;
+  const float thresh = 420;
   int line = 0;
   for (int i = 0; i < SensorCount; i++) {
     if (qtr[i] > thresh) {
@@ -175,11 +175,6 @@ void left90(bool skip = false, int additional = 0) {
   log::println(linedetect());
   if (linedetect())
     return;
-  //while (!linedetect()) {
-   // motor1.run(-100);
-   // motor2.run(-100); //turns lol
-   // qtr.Update();
-  //}
   utils::stopMotors();
   delay(200);
   utils::forward(-100);
@@ -219,11 +214,6 @@ void right90(bool skip = false, int additional = 0) {
   Serial.println(linedetect());
   if (linedetect())
     return;
-  /*while (!linedetect()) {
-    motor1.run(100);
-    motor2.run(100);
-    qtr.Update();
-  }*/
   utils::stopMotors();
   delay(200);
   utils::forward(-100);
@@ -242,27 +232,31 @@ void right90(bool skip = false, int additional = 0) {
  turn_right_to_black();
 }
 
-
-
-void trace_line() {
-  qtr.Update();
-  bool right = false, left = false;
-  check_lr_intersection(&left, &right);
-  int32_t line = qtr.get_line();
+int line_trace(){
+    qtr.Update();
+    int32_t line = qtr.get_line();
   line -= 3500;
   //hack to improve line tracing
-  const float boost = 0.12f;
+  const float boost = 0.30f;
   if (abs(line) > 2500) {
     kp = boost;
   }
   else {
-    kp = 0.07f;
+    kp = 0.08f;
   }
   int error = (kp * line);
 #ifndef LINEOFF
   motor1.run(-base_speed + error + ((error - prev_error) * kd));
   motor2.run(base_speed + error + ((error - prev_error) * kd));
 #endif
+return error;
+}
+
+void trace_line() {
+  qtr.Update();
+  bool right = false, left = false;
+  check_lr_intersection(&left, &right);
+  int error = line_trace();
   lcd.setCursor(0, 0);
   lcd.print(left);
   lcd.print(',');
@@ -275,7 +269,7 @@ void trace_line() {
     //   return;
     // motor1.run(0);
     // motor2.run(0);
-    motor1.stop();
+   motor1.stop();
     motor2.stop();
     //lcd.clear();
     //lcd.setCursor(0,0);
@@ -298,7 +292,7 @@ void trace_line() {
     //lcd.clear();
     //lcd.setCursor(0,0);
     // lcd.print("please! I just wanna go home");
-    left90();
+   left90();
     //delay(3000);
     // motor1.stop();
     // motor2.stop();
@@ -442,7 +436,6 @@ void green90l() {
   delay(150);
   utils::stopMotors();
   left(60, 100);
-
   turn_left_to_black();
 }
 
@@ -479,8 +472,6 @@ void green90r() {
   utils::stopMotors();
   right(60, 100);
   turn_right_to_black();
-  //turn 60 then check for line
-
 }
 
 void green180() {
