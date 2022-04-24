@@ -8,13 +8,9 @@
 VL53L0X sensor;
 Motor motor1(MPORT1); 
 Motor motor2(MPORT2); 
+Motor motor3(MPORT3);
 volatile int Enc1 = 0, Enc2 = 0;
-void Encoder1(){ 
-Enc1++; 
-}
-void Encoder2(){ 
-Enc2++; 
-}
+
 int tofports[] = { 0 , 1, 2 };
 void tcaselect(uint8_t i) {
   if (i > 7) return;
@@ -25,9 +21,7 @@ void tcaselect(uint8_t i) {
 }
 void Drive(int c, int l, int r)
 { 
-  Enc1 = 0;
-  Enc2 = 0;
-  while (Enc1 < c && Enc2 < c) {
+  while (abs(motor1.getTicks()) < c && abs(motor2.getTicks()) < c) {
 
 
     motor1.run(l);
@@ -40,13 +34,14 @@ void Drive(int c, int l, int r)
   return;
 }
 
-
+int triangleDETECT();
+#define TriangleDETECT() triangleDETECT()
 
 void setup()
 {
-  attachInterrupt(digitalPinToInterrupt(2), Encoder3, CHANGE);
-  attachInterrupt (digitalPinToInterrupt(18), Encoder1, CHANGE);
-  attachInterrupt (digitalPinToInterrupt(3), Encoder2, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(2), Encoder3, CHANGE);
+  //attachInterrupt (digitalPinToInterrupt(18), Encoder1, CHANGE);
+  //attachInterrupt (digitalPinToInterrupt(3), Encoder2, CHANGE);
   int i; 
   Serial.begin(9600);
   Wire.begin();  
@@ -66,19 +61,25 @@ void setup()
  
 }
 
+void TurnL(int deg){}
+void TurnR(int deg){}
+void Forward(int cm){}
+void Backward(int cm){}
+void VertCase(){}
+void HorzCase(){}
 
 void Evac()  {
 
-int case = 0, tri;
+int _case = 0, tri;
 
-  tri = triangleDETECT;
+  tri = triangleDETECT();
   // if the triangle is directly in front
   if (tri == 1) {
     TurnL(90);
-    Forward(100 cm ? );
+    Forward(100);
     if (CheckWall() == 2) {
 
-    case =  2 ;
+    _case =   2 ;
       TurnR(90);
       VertCase();
     }
@@ -88,7 +89,7 @@ int case = 0, tri;
 
       if (CheckWall() == 2)   {
 
-      case = 1;
+      _case =  1;
         TurnL(90);
         HorzCase();
 
@@ -98,7 +99,7 @@ int case = 0, tri;
         TurnR(90);
         Forward(75 cm ? );
         if (CheckWall() == 2) {
-        case = 3;
+          _case =  3;
           Backwards(75 cm ? );
 
           HorzCase();
@@ -106,7 +107,7 @@ int case = 0, tri;
 
         }
         else {
-        case = 4;
+           _case =  4;
 
           Backwards(75 cm ? );
 
@@ -135,7 +136,7 @@ int case = 0, tri;
       Forward(100 cm ? );
       if (CheckWall() == 2) {
 
-      case =  2 ;
+      _case =   2 ;
 
         HorzCase();
       }
@@ -145,7 +146,7 @@ int case = 0, tri;
 
         if (CheckWall() == 2)   {
 
-        case = 1;
+        _case =  1;
           TurnL(180);
           VertCase();
 
@@ -155,7 +156,7 @@ int case = 0, tri;
           TurnR(180);
           Forward(75 cm ? );
           if (CheckWall() == 2) {
-          case = 3;
+          _case =  3;
             Backwards(75 cm ? );
 
             VertCase();
@@ -163,7 +164,7 @@ int case = 0, tri;
 
           }
           else {
-          case = 4;
+          _case =  4;
 
             Backwards(75 cm ? );
 
@@ -187,14 +188,14 @@ int case = 0, tri;
       }
       Forward(75 ? cm);
       if (CheckWall() == 2)  {
-      case = 6;  // nah but it could also be 8, so maybe I might need to add like 4 more cases to reflec that fact ...
+      _case =  6;  // nah but it could also be 8, so maybe I might need to add like 4 more cases to reflec that fact ...
         TurnL(90);
         VertCase();
       }
       else {
         TurnL(90);
         if (CheckWall() == 2) {
-        case = 5;
+        _case =  5;
           TurnL(90);
           HorzCase();
         }
@@ -204,13 +205,13 @@ int case = 0, tri;
           TurnR(90);
           Forwards( however many cm); // the thing is I dont know. Could need to radically alter code
           if (CheckWall() == 2) {
-          case = 1 ;
+          _case =  1 ;
             TurnL(90);
             HorzCase();
 
           }
           else {
-          case = 2;
+          _case =  2;
             VertCase();
           }
         }
@@ -227,7 +228,7 @@ int triangleDETECT() {
   tcaselect(2);
   tofleft = sensor.readRangeContinuousMillimeters();
 
-  keydifference = tofback - toffront;   
+  keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
  
   Serial.println(keydifference); 
   if(keydifference >= 40){ 
@@ -254,7 +255,7 @@ int CheckWall() {
   int tofright; 
 
   tcaselect(2);
-  tofright = sensor.readContinousMillimeters(); 
+  tofright = sensor.readRangeContinuousMillimeters(); 
 
   if (tofright <= 300)
     return 1;
