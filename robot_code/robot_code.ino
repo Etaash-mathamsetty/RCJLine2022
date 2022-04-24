@@ -28,6 +28,7 @@ Motor motor2(MPORT1);
 float kp = 0.09f; // some random number for now
 const float kd = 0.09f;
 const int base_speed = 80;
+const int pingPin = 13;
 
 #define SerialOBJ Serial
 
@@ -47,6 +48,19 @@ void tcaselect(uint8_t i)
 }
 
 int prev_error = 0;
+
+float getDistMillimeters(){
+    pinMode(pingPin, OUTPUT);
+    digitalWrite(pingPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(pingPin, HIGH);
+    delayMicroseconds(5);
+    digitalWrite(pingPin, LOW);
+
+    pinMode(pingPin, INPUT);
+    return pulseIn(pingPin, HIGH)/26/2;
+
+}
 
 void check_lr_intersection(bool *left, bool *right)
 {
@@ -591,7 +605,7 @@ void loop()
   const float Kp = 0.45; // nice naming
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   // put your main code here, to run repeatedly:
-  //  if(tof.readRangeContinuousMillimeters() < 200){
+  //  if(getDistanceMillimeters() < 200){
   //     avoid_obs();
   //  }
 
@@ -605,12 +619,12 @@ void loop()
   }
   Serial.println();
   tcaselect(1);
-  if ((distance = tof.readRangeContinuousMillimeters()) < 170)
+  if ((distance = getDistanceMillimeters()) < 170)
   {
-    Serial.println(tof.readRangeContinuousMillimeters());
+    Serial.println(getDistanceMillimeters());
     left(90, 100);
     delay(500);
-    Serial.println(tof.readRangeContinuousMillimeters());
+    Serial.println(getDistanceMillimeters());
     if (tof.readRangeContinuousMillimeters() < 200)
     {
       left(180, 100);
