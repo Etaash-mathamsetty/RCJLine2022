@@ -43,15 +43,15 @@ namespace logger{
 		
 	}
 	
-	template <typename T>
-	void println(T thing){
+	//template <typename T>
+	void println(auto thing){
 		#ifndef LOGGER_DISABLE
 		Serial.println(thing);
 		#endif
 	}
 	
-	template <typename T>
-	void print(T thing){
+	//template <typename T>
+	void print(auto thing){
 		#ifndef LOGGER_DISABLE
 		Serial.print(thing);	
 		#endif

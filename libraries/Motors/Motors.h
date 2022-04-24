@@ -21,6 +21,7 @@ class Motor{
     this->port = port;
     if(attachEnc)
     attachEncoder();
+    boost = 0;
   //  mticks = ticks[port];
 
       //The PWM frequency is 976 Hz
@@ -53,10 +54,10 @@ class Motor{
 
 
 
-  void run(int speed){
-    #ifndef MOTORSOFF
-    speed = speed > 255 ? 255 : speed;
-    speed = speed < -255 ? -255 : speed;
+  void _run(int speed){
+    #ifndef MOTORSOFF	  
+    speed = min(UINT8_MAX, speed);
+    speed = max(-255, speed);
     if(speed >= 0){
       digitalWrite(pi_motor_pins[port].h2, LOW);
       digitalWrite(pi_motor_pins[port].h1, HIGH);
@@ -72,7 +73,20 @@ class Motor{
     }
     #endif
   }
+		   
+void run(int speed){
+	int _speed = 0;
+	if(speed > 0)
+	_speed = boost + speed;
+	if(speed < 0)
+	_speed = -boost + speed;
+	_run(_speed);
+}
 
+void addBoost(int speed){
+	boost = speed;
+}
+		   
   void stop(){
     run(0);
   }
@@ -127,6 +141,7 @@ class Motor{
   //int& mticks;
   
   int port;
+  uint8_t boost;
   static inline int ticks[4] = {0};
   static inline bool dir[4] = {true};
 };
