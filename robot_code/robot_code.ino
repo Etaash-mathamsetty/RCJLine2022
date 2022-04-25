@@ -25,8 +25,8 @@ VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
-float kp = 0.09f; // some random number for now
-const float kd = 0.09f;
+float kp = 0.07f; 
+const float kd = 0.6f;
 const int base_speed = 80;
 
 #define SerialOBJ Serial
@@ -52,7 +52,7 @@ void check_lr_intersection(bool *left, bool *right)
 {
 
   int sums = 0;
-  const int tresh = 2000;
+  const int tresh = 2100;
   for (int i = 0; i < SensorCount / 2; i++)
   {
     sums += qtr[i] - white_val;
@@ -121,14 +121,14 @@ int majority_linedetect()
 
 void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
 {
-  Serial.println("raw color:");
-  Serial.print(r);
-  Serial.print('\t');
-  Serial.print(g);
-  Serial.print('\t');
-  Serial.print(b);
-  Serial.print('\t');
-  Serial.println(c);
+  log::println("raw color:");
+  log::print(r);
+  log::print('\t');
+  log::print(g);
+  log::print('\t');
+  log::print(b);
+  log::print('\t');
+  log::println(c);
 }
 
 bool color_detect_black()
@@ -140,7 +140,7 @@ bool color_detect_black()
   tcs.setInterrupt(true);
   print_raw_color(r, g, b, c);
   // random value right now
-  if (c < 100)
+  if (c < 160)
   {
     return true;
   }
@@ -172,7 +172,7 @@ void right90(bool, int additional);
 
 void left90(bool skip = false, int additional = 0)
 {
-  Serial.println("left90");
+  log::println("left90");
   motor2.resetTicks();
   while (motor2.getTicks() <= 150 && linedetect() && !skip)
   {
@@ -200,7 +200,7 @@ void left90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(200);
   utils::forward(-100);
-  delay(200);
+  delay(210);
   utils::stopMotors();
   /*
   Serial.println((int)qtr.get_line() - 3500);
@@ -236,14 +236,14 @@ void right90(bool skip = false, int additional = 0)
     utils::forward(100);
   }
   qtr.Update();
-  Serial.print("Linedetect: ");
+  log::print("Linedetect: ");
   Serial.println(linedetect());
   if (linedetect())
     return;
   utils::stopMotors();
   delay(200);
   utils::forward(-100);
-  delay(200);
+  delay(210);
   utils::stopMotors();
 
   /*
@@ -541,8 +541,9 @@ void setup()
   Wire.begin();
   log::begin();
   delay(1000);
-  motor1.addBoost(20);
-  motor2.addBoost(20);
+  const uint8_t boost = 10;
+  motor1.addBoost(boost);
+  motor2.addBoost(boost);
   //  qtr.calibrate(func);
   // for(int i = 0; i < SensorCount; i++)
   // Serial.println(qtr.getOffValues()[i]);
@@ -688,8 +689,10 @@ void loop()
   {
     green90r();
   }
+  color_detect_black();
   // Serial.println(motor2.getTicks());
   //  qtr.Update();
   // Serial.println(linedetect());
   //  lcd_display_qtr();
+
 }
