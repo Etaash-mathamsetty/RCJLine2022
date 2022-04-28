@@ -58,7 +58,7 @@ void tcaselect(uint8_t i) {
 
 int prev_error = 0;
 
-float getDistMillimeters(){
+float getDistCm(){
     pinMode(pingPin, OUTPUT);
     digitalWrite(pingPin, LOW);
     delayMicroseconds(2);
@@ -352,108 +352,6 @@ void left(int angle, int speed) {
   stopMotor();
 }
 
-uint8_t green_detect(){
-    tcaselect(2);
-  float r, g, b;
-  tcs.setInterrupt(!true);
-  tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(!false);
-  bool gleft = false, gright = false;
-  if (g >= 100 && r < 100 && b < 100) {
-    gleft = true;
-  }
-  print_color(r, g, b);
-  tcaselect(3);
-  tcs.setInterrupt(false);
-  tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(true);
-  print_color(r, g, b);
-
-  if (g >= 100 && r < 100 && b < 100) {
-    gright = true;
-  }
-
-  return (uint8_t(gleft * UINT8_MAX) & 0x0F) | (uint8_t(gright * UINT8_MAX) & 0xF0);
-}
-
-void green180();
-
-void green90l() {
-  motor2.resetTicks();
-  //forward    
-  uint8_t double_green = 0;
-  bool pls_return = false;
-  while(motor2.getTicks() <= 5){
-  utils::forward(80);
-  qtr.Update();
-  Serial.println(majority_linedetect());
-  double_green = green_detect();
-  if(double_green == 0xFF){
-    green180();
-    return;
-  }
-  if(majority_linedetect() >= 4){
-      pls_return = true;
-  }
-  }
-
-  while (motor2.getTicks() <= 150) {
-    utils::forward(100);
-  }
-  if(pls_return){
-    return;
-  }
-  left(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) >= 500 ){
-    motor1.run(-100);
-    motor2.run(-100);
-  }
-}
-
-void green90r() {
-  motor2.resetTicks();
-  //forward
-  uint8_t double_green = 0;
-  bool pls_return = false;
-  while(motor2.getTicks() <= 5){
-  utils::forward(80);
-  qtr.Update();
-  Serial.println(majority_linedetect());
-  double_green = green_detect();
-  if(double_green == 0xFF){
-    green180();
-    return;
-  }
-  if(majority_linedetect() >= 4){
-    pls_return = true;
-  }
-  }
-
-  while (motor2.getTicks() <= 150) {
-    utils::forward(100);
-
-  }
-  if(pls_return){
-    return;
-  }
-  right(60, 100);
-  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
-    motor1.run(100);
-    motor2.run(100);
-  }
-  //turn 60 then check for line
-
-}
-
-void green180() {
-  
-  left(150,100);
-  while(abs((int32_t)qtr.get_line() - 3500) >= 500){
-    motor1.run(-100);
-    motor2.run(-100);
-  }
-}
-
 void setup() {
   // put your setup code here, to run once:
   Wire.begin();
@@ -492,11 +390,11 @@ void print_color(float r, float g, float b) {
   Serial.print('\t');
   Serial.println(b);
 }
-a
+
 void loop() {
 
   float distance;
-  float Kp = 0.45;
+  float Kp_obs = 3.5;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
   // put your main code here, to run repeatedly:
   //  if(tof.readRangeContinuousMillimeters() < 200){
@@ -506,29 +404,32 @@ void loop() {
   //SerialPrintf("dist %d\n",tof.readRangeContinuousMillimeters());
   trace_line();
 
-  for (int i = 0; i < SensorCount; i++) {
+ /* for (int i = 0; i < SensorCount; i++) {
     Serial.print(qtr[i]);
     Serial.print('\t');
-  }
+  }*/
   Serial.println();
   tcaselect(1);
-  if ((distance = getDistMillimeters()) < 170) {
-    Serial.println(getDistMillimeters());
+  distance = getDistCm();
+  Serial.println(distance);
+  if (distance < 20) {
     left(90, 100);
     delay(500);
-    Serial.println(getDistMillimeters());
-    if (getDistMillimeters() < 200) {
+    Serial.print("Distance After turn: ");
+    Serial.println(getDistCm());
+    if (getDistCm() < 30) {
       left(180, 100);
       delay(500);
+      utils::forward(70);
 
-      motor2.run(100 - distance * Kp);
-      motor1.run(-100 - distance * Kp);
+      motor2.run(100 - distance * Kp_obs);
+      motor1.run(-100 - distance * Kp_obs);
       delay(2000);
 
       while (!linedetect()) {
 
-        motor2.run(100 - distance * Kp);
-        motor1.run(-100 - distance * Kp);
+        motor2.run(100 - distance * Kp_obs);
+        motor1.run(-100 - distance * Kp_obs);
 
       }
 
@@ -539,14 +440,16 @@ void loop() {
     }
     else {
 
-      motor2.run(100 + distance * Kp);
-      motor1.run(-100 + distance * Kp);
+      utils::forward(70);
+      
+      motor2.run(100 + distance * Kp_obs);
+      motor1.run(-100 + distance * Kp_obs);
       delay(2000);
 
       while (!linedetect()) {
 
-        motor2.run(100 + distance * Kp);
-        motor1.run(-100 + distance * Kp);
+        motor2.run(100 + distance * Kp_obs);
+        motor1.run(-100 + distance * Kp_obs);
 
       }
 
@@ -556,7 +459,5 @@ void loop() {
       left(45, 70);
     }
   }
-
-  tcaselect(2);
 
 }
