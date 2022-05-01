@@ -26,7 +26,7 @@ sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
 float kp = 0.07f; 
-const float kd = 0.6f;
+const float kd = 0.06f;
 const int base_speed = 80;
 
 #define SerialOBJ Serial
@@ -271,7 +271,7 @@ int line_trace()
   }
   else
   {
-    kp = 0.08f;
+    kp = 0.07f;
   }
   int error = (kp * line);
 #ifndef LINEOFF
