@@ -413,14 +413,14 @@ void loop() {
   }*/
   Serial.println();
   tcaselect(1);
-  distance = getDistCm();
+  distance = getDistCm() + 14;
   Serial.println(distance);
-  if (distance < 20) {
+  if (getDistCm() < 6) {
     left(90, 100);
     delay(500);
     Serial.print("Distance After turn: ");
     Serial.println(getDistCm());
-    if (getDistCm() < 30) {
+    if (getDistCm() < 16) {
       left(180, 100);
       delay(500);
       utils::forward(70);
