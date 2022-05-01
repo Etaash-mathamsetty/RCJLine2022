@@ -126,9 +126,12 @@ int majority_linedetect() {
   const float thresh = 380;
   int line = 0;
   for (int i = 0; i < SensorCount; i++) {
+      Serial.print(qtr[i]);
+      Serial.print("     ");
     if (qtr[i] > thresh) {
       line++;
     }
+    Serial.println();
   }
   return line;
 }
@@ -360,9 +363,9 @@ void setup() {
   //  qtr.calibrate(func);
   //for(int i = 0; i < SensorCount; i++)
   //Serial.println(qtr.getOffValues()[i]);
-  qtr.addOffValues((const int[]) {
-    -37, 47, 47, 47, 47, 7, -37, -121
-  });
+  //qtr.addOffValues((const int[]) {
+    //-37, 47, 47, 47, 47, 7, -37, -121
+  //});
   lcd.init();
   lcd.backlight();
   lcd.setCursor(3, 0);
@@ -426,17 +429,19 @@ void loop() {
       motor1.run(-100 - distance * Kp_obs);
       delay(2000);
 
-      while (!linedetect()) {
+      qtr.Update();
+      while (majority_linedetect() < 3) {
 
         motor2.run(100 - distance * Kp_obs);
         motor1.run(-100 - distance * Kp_obs);
+        qtr.Update();
 
       }
 
-      utils::forward(70);
+      utils::forward(50);
       delay(500);
 
-      right(45, 70);
+      right(70, 70);
     }
     else {
 
@@ -446,17 +451,21 @@ void loop() {
       motor1.run(-100 + distance * Kp_obs);
       delay(2000);
 
-      while (!linedetect()) {
+      
+
+      qtr.Update();
+      while (majority_linedetect() < 3) {
 
         motor2.run(100 + distance * Kp_obs);
         motor1.run(-100 + distance * Kp_obs);
+        qtr.Update();
 
       }
 
-      utils::forward(70);
+      utils::forward(50);
       delay(500);
 
-      left(45, 70);
+      left(70, 70);
     }
   }
 
