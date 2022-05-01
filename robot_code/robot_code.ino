@@ -26,7 +26,7 @@ sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
 const float kp_orig = 0.09f;
-float kp = kp_orig; 
+float kp = kp_orig;
 const float kd = 0.06f;
 const int base_speed = 80;
 
@@ -201,7 +201,8 @@ void left90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(100);
   utils::resetTicks();
-  while(motor1.getTicks() < 40){
+  while (motor1.getTicks() < 40)
+  {
     utils::forward(-100);
   }
   turn_left_to_black();
@@ -236,7 +237,8 @@ void right90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(100);
   utils::resetTicks();
-  while(motor1.getTicks() < 40){
+  while (motor1.getTicks() < 40)
+  {
     utils::forward(-100);
   }
   turn_right_to_black();
@@ -678,5 +680,4 @@ void loop()
   //  qtr.Update();
   // Serial.println(linedetect());
   //  lcd_display_qtr();
-
 }
