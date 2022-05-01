@@ -23,6 +23,11 @@ void forward(int speed){
   forward(speed,speed);	
 }
 
+void resetTicks(){
+	motor->resetTicks();
+	motor2->resetTicks();
+}
+
 void stopMotors(){
 	motor->stop();
 	motor2->stop();
