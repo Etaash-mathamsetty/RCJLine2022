@@ -1,24 +1,36 @@
-//#include "MeMegaPi.h"  
-#include "Adafruit_TCS34725.h"
-#include <Wire.h>
-#include <VL53L0X.h>  
 #include <Motors.h>
+#include <stdio.h>
+#include <Wire.h>
+#include "Adafruit_TCS34725.h"
+#include <VL53L0X.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BNO055.h>
 
+Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
+sensors_event_t orientationData; 
+Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_50MS, TCS34725_GAIN_4X);
 
 VL53L0X sensor;
 Motor motor1(MPORT1); 
 Motor motor2(MPORT2); 
 Motor motor3(MPORT3);
-volatile int Enc1 = 0, Enc2 = 0;
+ 
+int ct = 0; 
+int tofports[] = { 0 , 5,  6 };
 
-int tofports[] = { 0 , 1, 2 };
 void tcaselect(uint8_t i) {
   if (i > 7) return;
 
   Wire.beginTransmission(0x70);
   Wire.write(1 << i);
   Wire.endTransmission();
+} 
+
+void stopMotor() {
+  motor1.stop();
+  motor2.stop();
 }
+ 
 void Drive(int c, int l, int r)
 { 
   while (abs(motor1.getTicks()) < c && abs(motor2.getTicks()) < c) {
@@ -33,9 +45,32 @@ void Drive(int c, int l, int r)
   motor2.stop(); 
   return;
 }
+void Raise(int b)
+{
+  motor3.resetTicks();
 
-int triangleDETECT();
-#define TriangleDETECT() triangleDETECT()
+  while (abs(motor3.getTicks()) < b) {
+
+    motor3.run(200);
+
+  }
+  motor3.stop();
+  return;
+
+}
+
+void Lower(int b)
+{
+  motor3.resetTicks();
+  while (abs(motor3.getTicks()) < b) {
+
+    motor3.run(-200);
+
+
+  }
+  motor3.stop();
+  return;
+}
 
 void setup()
 {
@@ -61,12 +96,7 @@ void setup()
  
 }
 
-void TurnL(int deg){}
-void TurnR(int deg){}
-void Forward(int cm){}
-void Backward(int cm){}
-void VertCase(){}
-void HorzCase(){}
+
 
 void Evac()  {
 
@@ -266,27 +296,85 @@ int CheckWall() {
 
 }
 
-void Navigation() { 
-    // put your main code here, to run repeatedly:
-  int spinnumber = 2600; 
-  //will need to implement tof sensor into this, probably not that hard 
-  
-  Drive(2500, 100, 100); 
-  delay(500); 
-  Drive(500, -100, -100); 
-  delay(500); 
-  Drive(spinnumber, 150, 0); 
-  delay(500); 
-  Drive(2500, 100, 100); 
-  delay(500);  
-  Drive(500, -100, -100); 
-  delay(500); 
-  Drive(spinnumber, 0, 150); 
-  delay(500);  
-  
-  
-  //need to figure out how to detect the triangle during the evac movemnts
-  //when trinagle is found, spin the robot around, back up and then dump the balls. 
-  
+void navright() {
+  int spinnumber = 2400;
+  tcaselect(0);
+  float dist = sensor.readRangeContinuousMillimeters();
+  //will need to implement tof sensor into this, probably not that hard
+  if (dist <= 100) {
+    Drive(100, 100, 100);
+    Drive(500, -100, -100); //so that the robot doesn't hit the wall when it turns
+    if (ct == 1) {
+      Drive(spinnumber, 140, 0);
+      delay(250);
+      Raise(1000);
+      if (triangleDETECT() == 3) {
+        ct = 0; 
+        Lower(1000); 
+        
+        
+      }
+      else {
+        Lower(1000);
+        while (1) {}
+      }
+    }
+    else {
+      Drive(spinnumber, 0, 140);
+      if (triangleDETECT() == 3) {
+        ct = 1;
+        Lower(1000);
+        
+        
+      }
+      else {
+       Lower(1000);
+        while (1) {}
+      }
+    }
+  }
+  else {
+    Drive(100, 100, 100);
+  }
 }
 
+void navleft() {
+  tcaselect(0);
+
+  int spinnumber = 2400;
+  float dist = sensor.readRangeContinuousMillimeters();
+  //will need to implement tof sensor into this, probably not that hard
+
+  if (dist <= 100) {
+    Drive(100, 100, 100);
+    Drive(500, -100, -100); //so that the robot doesn't hit the wall when it turns
+    if (ct == 0) {
+      Drive(spinnumber, 140, 0);
+      delay(250);
+      Raise(1000);
+      if (triangleDETECT() == 3) {
+        ct = 1; 
+        Lower(1000); 
+      }
+      else {
+       Lower(1000);
+        while (1) {}
+      }
+    }
+    else {
+      Drive(spinnumber, 0, 140);
+      if (triangleDETECT() == 3) {
+        Lower(1000);
+        ct = 0; 
+      }
+      else {
+        Lower(1000); 
+         while (1) {}
+      }
+    }
+  }
+  else {
+    Drive(100, 100, 100);
+  }
+
+}
