@@ -25,7 +25,8 @@ VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
-float kp = 0.07f; 
+const float kp_orig = 0.07f;
+float kp = kp_orig; 
 const float kd = 0.06f;
 const int base_speed = 80;
 
@@ -271,7 +272,7 @@ int line_trace()
   }
   else
   {
-    kp = 0.07f;
+    kp = kp_orig;
   }
   int error = (kp * line);
 #ifndef LINEOFF
