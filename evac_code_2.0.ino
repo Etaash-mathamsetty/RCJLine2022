@@ -478,10 +478,10 @@ void loop() {
     findPosition(&pos, &room_orientation);
     Serial.println(pos);
     Serial.println(room_orientation);
-
+    Lower(3000); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
     if (room_orientation == 1 && pos != 0) {
       left(90, 80);
-      while (!checkWall(50)) {
+      while (!checkWall(50)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop 
         utils::forward(100);
       }
       right(180, 80);
@@ -500,12 +500,14 @@ void loop() {
           utils::forward(100);
         }
         if (count % 2) {
+          driveDist(100, 100); 
           right(90, 80);
           driveDist(250, 100);
           leave = checkWall(30);
           right(90, 80);
         }
-        else {
+        else { 
+          driveDist(100, 100); 
           left(90, 80);
           driveDist(250, 100);
           leave = checkWall(30);
@@ -520,13 +522,15 @@ void loop() {
         while (!checkWall(50)) {
           utils::forward(100);
         }
-        if (count % 2) {
+        if (count % 2) { 
+          driveDist(100, 100);  //needs to ram the ball in 
           left(90, 80);
           driveDist(250, 100);
           leave = checkWall(30);
           left(90, 80);
         }
         else {
+          driveDist(100, 100); 
           right(90, 80);
           driveDist(250, 100);
           leave = checkWall(30);
@@ -567,10 +571,12 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
   if (triangle_orient) {
     *triangle_pos = 2;
-    *room_orient = triangle_orient;
+    *room_orient = triangle_orient; 
+    return; 
   }
   else {
-    *triangle_pos = 3;
+    *triangle_pos = 3; 
+    return; 
   }
 
 
@@ -589,7 +595,6 @@ bool checkWall(int dist) {
 }
 
 int triangleDETECT() {
-  //x = the differnce betweeen the location of the top and the bottom
   int i = random(0, 2);
   Serial.print("triangleDETECT ");
   Serial.println(i);
@@ -607,7 +612,7 @@ int triangleDETECT() {
   Serial.println(keydifference);
   if (keydifference >= 40) {
 
-    Serial.println("triangle1");
+    Serial.println("triangle1"); 
     return (1);
 
   }
