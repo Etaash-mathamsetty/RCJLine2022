@@ -29,6 +29,7 @@ const float kp_orig = 0.09f;
 float kp = kp_orig;
 const float kd = 0.06f;
 const int base_speed = 80;
+const uint8_t pingPin = A15;
 
 #define SerialOBJ Serial
 
@@ -48,6 +49,18 @@ void tcaselect(uint8_t i)
 }
 
 int prev_error = 0;
+
+float getDistCm(){
+    pinMode(pingPin, OUTPUT);
+    digitalWrite(pingPin, LOW);
+    delayMicroseconds(2);
+    digitalWrite(pingPin, HIGH);
+    delayMicroseconds(5);
+    digitalWrite(pingPin, LOW);
+
+    pinMode(pingPin, INPUT);
+    return pulseIn(pingPin, HIGH)/26.0/2.0;
+}
 
 void check_lr_intersection(bool *left, bool *right)
 {
@@ -575,68 +588,62 @@ void loop()
 {
 
   float distance;
-  const float Kp = 0.45; // nice naming
+  const float Kp_obs = 3.5; // nice naming
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  // put your main code here, to run repeatedly:
-  //  if(tof.readRangeContinuousMillimeters() < 200){
-  //     avoid_obs();
-  //  }
 
-  // SerialPrintf("dist %d\n",tof.readRangeContinuousMillimeters());
+  qtr.Update(); 
   trace_line();
-  qtr.Update();
+
   for (int i = 0; i < SensorCount; i++)
   {
-    Serial.print(qtr[i]);
-    Serial.print('\t');
+    log::print(qtr[i]);
+    log::print('\t');
   }
-  Serial.println();
-  tcaselect(1);
-  if ((distance = tof.readRangeContinuousMillimeters()) < 170)
-  {
-    Serial.println(tof.readRangeContinuousMillimeters());
-    left(90, 100);
+  log::println();
+  //tcaselect(1);
+  distance = getDistCm() + 14;
+  log::println(distance);
+  if(distance < 20){
+    left(90,100);
     delay(500);
-    Serial.println(tof.readRangeContinuousMillimeters());
-    if (tof.readRangeContinuousMillimeters() < 200)
-    {
-      left(180, 100);
+    log::print("dist after turn: ");
+    distance = getDistCm() + 14;
+    log::println(distance);
+    if(distance < 30){
+      left(180,100);
       delay(500);
-
-      motor2.run(100 - distance * Kp);
-      motor1.run(-100 - distance * Kp);
-      delay(2000);
-
-      while (!linedetect())
-      {
-
-        motor2.run(100 - distance * Kp);
-        motor1.run(-100 - distance * Kp);
-      }
-
       utils::forward(70);
-      delay(500);
 
-      right(45, 70);
+      motor2.run(100 - distance * Kp_obs);
+      motor1.run(-100 - distance * Kp_obs);
+      delay(2000);
+      
+      qtr.Update();
+      while(majority_linedetect() < 3){
+        motor2.run(100 - distance * Kp_obs);
+        motor1.run(-100 - distance * Kp_obs);
+        qtr.Update();
+      }
+      utils::forward(50);
+      delay(500);
+      right(70,70);
     }
-    else
-    {
+    else{
+      utils::forward(70);
 
-      motor2.run(100 + distance * Kp);
-      motor1.run(-100 + distance * Kp);
+      motor2.run(100 + distance * Kp_obs);
+      motor1.run(-100 + distance * Kp_obs);
       delay(2000);
 
-      while (!linedetect())
-      {
-
-        motor2.run(100 + distance * Kp);
-        motor1.run(-100 + distance * Kp);
+      qtr.Update();
+      while(majority_linedetect() < 3){
+        motor2.run(100 + distance * Kp_obs);
+        motor1.run(-100 + distance * Kp_obs);
+        qtr.Update();
       }
-
-      utils::forward(70);
+      utils::forward(50);
       delay(500);
-
-      left(45, 70);
+      left(70,70);
     }
   }
 
@@ -676,8 +683,4 @@ void loop()
     green90r();
   }
   color_detect_black();
-  // Serial.println(motor2.getTicks());
-  //  qtr.Update();
-  // Serial.println(linedetect());
-  //  lcd_display_qtr();
 }
