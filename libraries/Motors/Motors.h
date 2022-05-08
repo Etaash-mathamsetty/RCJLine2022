@@ -121,7 +121,10 @@ private:
   CREATE_INTERUPT(MPORT2);
   CREATE_INTERUPT(MPORT3);
   CREATE_INTERUPT(MPORT4);
-  
+
+#undef CREATE_INTERUPT
+#undef CREATE_INTERUPT2
+
   int port;
   uint8_t boost;
   static inline int ticks[4] = {0};
