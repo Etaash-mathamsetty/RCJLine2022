@@ -35,15 +35,6 @@ const float kd = 0.07f;
 const int base_speed = 80;
 
 #define SerialOBJ Serial
-#define NUMARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
-#define SerialPrintf(fmt, ...) \
-  {\
-    char* str = new char[strlen(fmt) + NUMARGS(__VA_ARGS__)*40 + 5]; \
-    sprintf(str,fmt, __VA_ARGS__); \
-    Serial.print(str); \
-    delete str; \
-  }
-
 
 #define MUXADDR 0x70
 
