@@ -602,8 +602,9 @@ void loop()
   log::println();
   //tcaselect(1);
   distance = getDistCm() + 14;
+  float org_dist = distance;
   log::println(distance);
-  if(distance < 20){
+  if(distance < 25){
     left(90,100);
     delay(500);
     log::print("dist after turn: ");
@@ -614,36 +615,36 @@ void loop()
       delay(500);
       utils::forward(70);
 
-      motor2.run(100 - distance * Kp_obs);
-      motor1.run(-100 - distance * Kp_obs);
+      motor2.run(100 - org_dist * Kp_obs);
+      motor1.run(-100 - org_dist * Kp_obs);
       delay(2000);
       
       qtr.Update();
       while(majority_linedetect() < 3){
-        motor2.run(100 - distance * Kp_obs);
-        motor1.run(-100 - distance * Kp_obs);
+        motor2.run(100 - org_dist * Kp_obs);
+        motor1.run(-100 - org_dist * Kp_obs);
         qtr.Update();
       }
-      utils::forward(80);
+      utils::forward(100);
       delay(300);
-      right(90,70);
+      right(100,70);
     }
     else{
       utils::forward(70);
 
-      motor2.run(100 + distance * Kp_obs);
-      motor1.run(-100 + distance * Kp_obs);
+      motor2.run(100 + org_dist * Kp_obs);
+      motor1.run(-100 + org_dist * Kp_obs);
       delay(2000);
 
       qtr.Update();
       while(majority_linedetect() < 3){
-        motor2.run(100 + distance * Kp_obs);
-        motor1.run(-100 + distance * Kp_obs);
+        motor2.run(100 + org_dist * Kp_obs);
+        motor1.run(-100 + org_dist * Kp_obs);
         qtr.Update();
       }
-      utils::forward(80);
+      utils::forward(100);
       delay(300);
-      left(90,70);
+      left(100,70);
     }
   }
 
