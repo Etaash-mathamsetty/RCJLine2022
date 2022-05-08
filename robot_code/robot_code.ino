@@ -25,9 +25,9 @@ VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
-const float kp_orig = 0.09f;
+const float kp_orig = 0.07f;
 float kp = kp_orig;
-const float kd = 0.06f;
+const float kd = 0.0f;
 const int base_speed = 80;
 const uint8_t pingPin = A15;
 
@@ -169,6 +169,14 @@ void turn_left_to_black()
     motor1.run(-100);
     motor2.run(-100);
   }
+  while(color_detect_black()){
+    motor1.run(-100);
+    motor2.run(-100);
+  }
+  while(!color_detect_black()){
+    motor1.run(100);
+    motor2.run(100);
+  }
   utils::stopMotors();
 }
 
@@ -178,6 +186,14 @@ void turn_right_to_black()
   {
     motor1.run(100);
     motor2.run(100);
+  }
+  while(color_detect_black()){
+    motor1.run(100);
+    motor2.run(100);
+  }
+  while(!color_detect_black()){
+    motor1.run(-100);
+    motor2.run(-100);
   }
   utils::stopMotors();
 }
@@ -219,6 +235,7 @@ void left90(bool skip = false, int additional = 0)
     utils::forward(-100);
   }
   turn_left_to_black();
+  //utils::forwardTicks(-100,30);
 }
 
 void right90(bool skip = false, int additional = 0)
@@ -255,6 +272,7 @@ void right90(bool skip = false, int additional = 0)
     utils::forward(-100);
   }
   turn_right_to_black();
+ // utils::forwardTicks(-100, 30);
 }
 
 int line_trace()
@@ -263,7 +281,7 @@ int line_trace()
   int32_t line = qtr.get_line();
   line -= 3500;
   // hack to improve line tracing
-  const float boost = 0.30f;
+  const float boost = 0.08f;
   if (abs(line) > 2500)
   {
     kp = boost;
@@ -480,11 +498,16 @@ void green90l()
   }
   utils::stopMotors();
   delay(200);
-  utils::forward(-100);
-  delay(150);
+  utils::resetTicks();
+  while(motor1.getTicks() <= 40){
+      utils::forward(-100);
+  }
   utils::stopMotors();
+  delay(60);
   left(60, 100);
   turn_left_to_black();
+  utils::forward(90);
+  delay(60);
 }
 
 void green90r()
@@ -520,11 +543,16 @@ void green90r()
   }
   utils::stopMotors();
   delay(200);
-  utils::forward(-100);
-  delay(150);
+  utils::resetTicks();
+  while(motor1.getTicks() <= 40){
+    utils::forward(-100);
+  }
   utils::stopMotors();
+  delay(60);
   right(60, 100);
   turn_right_to_black();
+  utils::forward(90);
+  delay(60);
 }
 
 void green180()
@@ -553,10 +581,6 @@ void setup()
   lcd.setCursor(3, 0);
   // lcd.print("Hello World!");
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
-  tcaselect(1);
-  tof.setTimeout(500);
-  tof.init();
-  tof.startContinuous();
   tcaselect(2);
   if (!tcs.begin())
   {
@@ -629,7 +653,8 @@ void loop()
       delay(100);
       utils::forward(100);
       delay(300);
-      right(100,70);
+      right(140,60);
+      turn_right_to_black();
     }
     else{
       utils::forward(70);
@@ -648,7 +673,8 @@ void loop()
       delay(100);
       utils::forward(100);
       delay(300);
-      left(100,70);
+      left(140,60);
+      turn_left_to_black();
     }
   }
 
