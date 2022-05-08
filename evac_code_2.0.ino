@@ -481,14 +481,15 @@ void loop() {
     Lower(3000); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
     if (room_orientation == 1 && pos != 0) {
       left(90, 80);
-      while (!checkWall(50)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop 
+      while (!checkWall(0, 50)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop  
         utils::forward(100);
       }
-      right(180, 80);
+      right(180, 80); 
+      //what is going on here? 
     }
     else if (room_orientation == 2 && pos != 0) {
       right(90, 80);
-      while (!checkWall(50)) {
+      while (!checkWall(0, 50)) {
         utils::forward(100);
       }
       left(180, 80);
@@ -496,21 +497,21 @@ void loop() {
     else if (room_orientation == 1) {
       int count  = 0;
       while (!leave) {
-        while (!checkWall(50)) {
+        while (!checkWall(0, 50)) {
           utils::forward(100);
         }
         if (count % 2) {
           driveDist(100, 100); 
           right(90, 80);
           driveDist(250, 100);
-          leave = checkWall(30);
+          leave = checkWall(0, 30);
           right(90, 80);
         }
         else { 
           driveDist(100, 100); 
           left(90, 80);
           driveDist(250, 100);
-          leave = checkWall(30);
+          leave = checkWall(0, 30);
           left(90, 80);
         }
         count++;
@@ -519,21 +520,21 @@ void loop() {
   else if (room_orientation == 2) {
       int count  = 0;
       while (!leave) {
-        while (!checkWall(50)) {
+        while (!checkWall(0, 50)) {
           utils::forward(100);
         }
         if (count % 2) { 
           driveDist(100, 100);  //needs to ram the ball in 
           left(90, 80);
           driveDist(250, 100);
-          leave = checkWall(30);
+          leave = checkWall(0, 30);
           left(90, 80);
         }
         else {
           driveDist(100, 100); 
           right(90, 80);
           driveDist(250, 100);
-          leave = checkWall(30);
+          leave = checkWall(0, 30);
           right(90, 80);
         }
         count++;
@@ -560,7 +561,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
   *room_orient = 2;
   left(90, 80);
 
-  if (checkWall(100)) {
+  if (checkWall(5, 100)) {
     right(180, 80);
     *room_orient = 1;
   }
@@ -581,15 +582,16 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
 
 }
+//numbers used for checkwall might need to be changed too because tof is inside the scoop 
+bool checkWall(int sensor, int dist) {
 
-bool checkWall(int dist) {
+  int tof;
+  // the scoop tof is located at 0  
+  // the other tofs are at 5, 6 
+  tcaselect(sensor);
+  tof = tof.readRangeContinuousMillimeters();
 
-  int tofright;
-
-  tcaselect(1);
-  tofright = tof.readRangeContinuousMillimeters();
-
-  return tofright <= dist;
+  return tof <= dist;
 
 
 }
