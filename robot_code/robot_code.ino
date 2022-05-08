@@ -625,6 +625,8 @@ void loop()
         motor1.run(-100 - org_dist * Kp_obs);
         qtr.Update();
       }
+      utils::stopMotors();
+      delay(100);
       utils::forward(100);
       delay(300);
       right(100,70);
@@ -642,6 +644,8 @@ void loop()
         motor1.run(-100 + org_dist * Kp_obs);
         qtr.Update();
       }
+      utils::stopMotors();
+      delay(100);
       utils::forward(100);
       delay(300);
       left(100,70);
