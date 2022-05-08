@@ -102,7 +102,16 @@ void addBoost(int speed){
     attachInterrupt(digitalPinToInterrupt(pi_motor_pins[port].cha),interupt3,RISING);
   }
 
-  static void interupt0(){
+  int getTicks(){
+    return ticks[port];
+  }
+
+  void resetTicks(){
+  	ticks[port] = 0;
+  }
+  //int& mticks;
+private: 
+    static void interupt0(){
       if(dir[0])
       ticks[0]++;
       else
@@ -130,15 +139,6 @@ void addBoost(int speed){
       else
       ticks[3]--;
   }
-
-  int getTicks(){
-    return ticks[port];
-  }
-
-  void resetTicks(){
-  	ticks[port] = 0;
-  }
-  //int& mticks;
   
   int port;
   uint8_t boost;
