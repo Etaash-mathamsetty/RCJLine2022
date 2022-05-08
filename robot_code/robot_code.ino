@@ -624,9 +624,9 @@ void loop()
         motor1.run(-100 - distance * Kp_obs);
         qtr.Update();
       }
-      utils::forward(50);
-      delay(500);
-      right(70,70);
+      utils::forward(80);
+      delay(300);
+      right(90,70);
     }
     else{
       utils::forward(70);
@@ -641,9 +641,9 @@ void loop()
         motor1.run(-100 + distance * Kp_obs);
         qtr.Update();
       }
-      utils::forward(50);
-      delay(500);
-      left(70,70);
+      utils::forward(80);
+      delay(300);
+      left(90,70);
     }
   }
 
