@@ -494,7 +494,7 @@ void loop() {
       }
       left(180, 80);
     }
-    else if (room_orientation == 1) {
+    if (room_orientation == 1) {
       int count  = 0;
       while (!leave) {
         while (!checkWall(0, 50)) {
@@ -540,10 +540,49 @@ void loop() {
         count++;
       }
     }
+    utils::forward(100);
+    left(180, 100);
+    utils::forward(-100);
+    Raise(3000);
+
+    future = orientationData.orientation.x + 180 < 360 ? orientationData.orientation.x : orientationData.orientation.x - 180;
+    
+    while(orientationData.orientation.x < future){
+      while (!checkWall(5,1200)){
+        motor1.run(100);
+        motor2.run(100);
+      }
+
+      do {
+        utils::resetTicks();
+        utils::forward(100);
+
+      } while(silver_linedetect() > 6 && !front_green());
+
+      if (front_green()){
+        break;
+      }
+
+      while(motor1.getTicks() > 0){
+        utils::forward(-100);
+      }
+
+    }
 
   while (true);
 }
 
+}
+
+bool front_green(){
+  tcaselect(4);
+
+  uint16_t r, g, b;
+  tcs.setInterrupt(false);
+  tcs.getRGB(&r, &g, &b);
+  tcs.setInterrupt(true);
+
+  return g >= 100 && r < 100 && b < 100;
 }
 
 void findPosition(int* triangle_pos, int* room_orient) {
@@ -585,13 +624,13 @@ void findPosition(int* triangle_pos, int* room_orient) {
 //numbers used for checkwall might need to be changed too because tof is inside the scoop 
 bool checkWall(int sensor, int dist) {
 
-  int tof;
+  int tof_dist;
   // the scoop tof is located at 0  
   // the other tofs are at 5, 6 
   tcaselect(sensor);
-  tof = tof.readRangeContinuousMillimeters();
+  tof_dist = tof.readRangeContinuousMillimeters();
 
-  return tof <= dist;
+  return tof_dist <= dist;
 
 
 }
