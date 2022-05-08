@@ -111,15 +111,16 @@ void addBoost(int speed){
   }
   //int& mticks;
 private: 
-#define CREATE_INTERUPT(x) static void interupt##x(){ \
+#define CREATE_INTERUPT2(x) static void interupt##x(){ \
   if(dir[x]) ticks[x]++; \
   else ticks[x]--; \
   }
+#define CREATE_INTERUPT(x) CREATE_INTERUPT2(x)
   
-  CREATE_INTERUPT(0);
-  CREATE_INTERUPT(1);
-  CREATE_INTERUPT(2);
-  CREATE_INTERUPT(3);
+  CREATE_INTERUPT(MPORT1);
+  CREATE_INTERUPT(MPORT2);
+  CREATE_INTERUPT(MPORT3);
+  CREATE_INTERUPT(MPORT4);
   
   int port;
   uint8_t boost;
