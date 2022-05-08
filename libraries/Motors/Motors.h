@@ -90,17 +90,19 @@ void addBoost(int speed){
   void stop(){
     run(0);
   }
-
+#define ATTACH_INT(x) attachInterrupt(digitalPinToInterrupt(pi_motor_pins[x].cha),interupt##x,RISING)
   void attachEncoder(){
+  //will make this better later I think
     if(port == 0)
-    attachInterrupt(digitalPinToInterrupt(pi_motor_pins[port].cha),interupt0,RISING);
+      ATTACH_INT(0);
     if(port == 1)
-    attachInterrupt(digitalPinToInterrupt(pi_motor_pins[port].cha),interupt1,RISING);
+      ATTACH_INT(1);
     if(port == 2)
-    attachInterrupt(digitalPinToInterrupt(pi_motor_pins[port].cha),interupt2,RISING);
+      ATTACH_INT(2);
     if(port == 3)
-    attachInterrupt(digitalPinToInterrupt(pi_motor_pins[port].cha),interupt3,RISING);
+      ATTACH_INT(3);
   }
+#undef ATTACH_INT
 
   int getTicks(){
     return ticks[port];
