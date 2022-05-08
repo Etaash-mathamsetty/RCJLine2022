@@ -23,9 +23,24 @@ void forward(int speed){
   forward(speed,speed);	
 }
 
+
 void resetTicks(){
 	motor->resetTicks();
 	motor2->resetTicks();
+}
+
+void forwardTicks(int speed, int ticks){
+  resetTicks();
+  if(speed > 0){
+    while(motor2->getTicks() <= ticks){
+      forward(speed);
+    }
+  }
+  else{
+    while(motor->getTicks() <= ticks){
+      forward(speed);
+    }
+  }
 }
 
 void stopMotors(){
