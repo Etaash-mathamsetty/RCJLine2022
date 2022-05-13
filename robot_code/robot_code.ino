@@ -174,8 +174,8 @@ void turn_left_to_black()
     motor2.run(-100);
   }
   while(!color_detect_black()){
-    motor1.run(100);
-    motor2.run(100);
+    motor1.run(90);
+    motor2.run(90);
   }
   utils::stopMotors();
 }
@@ -192,8 +192,8 @@ void turn_right_to_black()
     motor2.run(100);
   }
   while(!color_detect_black()){
-    motor1.run(-100);
-    motor2.run(-100);
+    motor1.run(-90);
+    motor2.run(-90);
   }
   utils::stopMotors();
 }
@@ -568,7 +568,7 @@ void setup()
   Wire.begin();
   log::begin();
   delay(1000);
-  const uint8_t boost = 10;
+  const int boost = 10;
   motor1.addBoost(boost);
   motor2.addBoost(boost);
   //  qtr.calibrate(func);
@@ -713,5 +713,5 @@ void loop()
   {
     green90r();
   }
-  color_detect_black();
+ // color_detect_black();
 }
