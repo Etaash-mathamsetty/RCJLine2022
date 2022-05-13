@@ -1,9 +1,11 @@
+#include <HID.h>
+
 #include "qtrSensors.h"
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BNO055.h>
 #include <utility/imumaths.h>
-#include <LiquidCrystal_I2C.h>
+//#include <LiquidCrystal_I2C.h>
 #include <VL53L0X.h>
 #include "Adafruit_TCS34725.h"
 //#define MotorsOff
@@ -19,7 +21,7 @@ const int8_t SensorCount = 8;
 QTRSensors qtr((const uint8_t[]) {
   A7, A8, A9, A10, A11, A12, A13, A14
 }, SensorCount, A6);
-LiquidCrystal_I2C lcd(LCD_ADDR, 20, 4);
+//LiquidCrystal_I2C lcd(LCD_ADDR, 20, 4);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
 //Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_4X);
@@ -87,16 +89,16 @@ void check_lr_intersection(bool* left, bool* right) {
   // bool right = false;
   if (sums > tresh) {
     *left  = true;
-    lcd.setCursor(0, 3);
-    lcd.print("int 1");
+    //lcd.setCursor(0, 3);
+    //lcd.print("int 1");
     //motor1.run(0);
     //motor2.run(0);
     //delay(3000);
   }
   if (sums < -tresh) {
     *right = true;
-    lcd.setCursor(0, 3);
-    lcd.print("int 2");
+    //lcd.setCursor(0, 3);
+    //lcd.print("int 2");
     //  motor1.run(0);
     // motor2.run(0);
     //delay(3000);
@@ -243,10 +245,10 @@ void trace_line() {
   motor1.run(-base_speed + error + ((error - prev_error) * kd));
   motor2.run(base_speed + error + ((error - prev_error) * kd));
 #endif
-  lcd.setCursor(0, 0);
-  lcd.print(left);
-  lcd.print(',');
-  lcd.print(right);
+  //lcd.setCursor(0, 0);
+  //lcd.print(left);
+  //lcd.print(',');
+  //lcd.print(right);
   //Serial.println(error-prev_error);
   prev_error = error;
   if (right == true) {
@@ -284,14 +286,14 @@ void trace_line() {
     // motor2.stop();
     // delay(3000);
   }
-  lcd.clear();
+  //lcd.clear();
 }
 
 void lcd_display_qtr() {
-  lcd.setCursor(2, 0);
+  //lcd.setCursor(2, 0);
   for (int i = 0; i < SensorCount; i++) {
-    lcd.print(qtr[i]);
-    lcd.print(',');
+    //lcd.print(qtr[i]);
+    //lcd.print(',');
   }
   //delay(150);
 }
@@ -388,16 +390,40 @@ void setup() {
   //qtr.addOffValues((const int[]) {
   //-37, 47, 47, 47, 47, 7, -37, -121
   //});
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(3, 0);
+  //lcd.init();
+  //lcd.backlight();
+  //lcd.setCursor(3, 0);
   //lcd.print("Hello World!");
-  tcaselect(0);
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS); \
-  tcaselect(1);
+  
+  tcaselect(0);
   tof.setTimeout(500);
   tof.init();
   tof.startContinuous();
+  tcaselect(5);
+  tof.setTimeout(500);
+  tof.init();
+  tof.startContinuous();
+  tcaselect(6);
+  tof.setTimeout(500);
+  tof.init();
+  tof.startContinuous();
+
+  if (!tcs.begin())
+  {
+    Serial.println("error first!");
+  }
+  tcaselect(3);
+  if (!tcs.begin())
+  {
+    Serial.println("error!");
+  }
+  tcaselect(4);
+  if (!tcs.begin())
+  {
+    Serial.println("error!");
+  }
+  
   utils::setMotors(&motor1, &motor2);
 }
 
@@ -533,7 +559,7 @@ void loop() {
     }
     //basically 
     Raise(1500); //half way raise 
-    if(TriangleDETECT() != 0){ 
+    if(triangleDETECT() != 0){ 
         left(90, 100); 
         if(checkWall(5, 30)){ 
            right(90, 100);  
@@ -541,7 +567,7 @@ void loop() {
            driveDist(250, 100);  
            right(45, 100);
            Raise(1500); 
-           break; 
+         
         } 
         else { 
            right(90, 100); 
@@ -549,37 +575,37 @@ void loop() {
            driveDist(250, 100);  
            left(45, 100);
            Raise(1500); 
-           break; 
+        
         } 
         
     }
     else {
        left(90, 100); 
-       if(TriangleDETECT() == 1) {
+       if(triangleDETECT() == 1) {
            right(180, 100); 
-           while(!checkwall(5, 100))
+           while(!checkWall(5, 100))
            utils::forward(100); 
            left(180, 100); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
            Raise(1500); 
-           break; 
+          
         } 
        else {
        right(180, 100); 
-        while(!checkwall(6, 100))
+        while(!checkWall(6, 100))
         utils::forward(100);  
         right(180, 100);  
         Raise(1500); 
-        break; 
+      
        }
     }
    //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit 
 
-    future = orientationData.orientation.x + 180 < 360 ? orientationData.orientation.x : orientationData.orientation.x - 180;
+    float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
     
     while(orientationData.orientation.x < future){
       while (!checkWall(5,1200)){
-        motor1.run(100);
-        motor2.run(100);
+        motor1.run(75);
+        motor2.run(75);
       }
 
       do {
@@ -606,9 +632,9 @@ void loop() {
 bool front_green(){
   tcaselect(4);
 
-  uint16_t r, g, b;
+  uint16_t r, g, b, c;
   tcs.setInterrupt(false);
-  tcs.getRGB(&r, &g, &b);
+  tcs.getRawData(&r, &g, &b, &c);
   tcs.setInterrupt(true);
 
   return g >= 100 && r < 100 && b < 100;
