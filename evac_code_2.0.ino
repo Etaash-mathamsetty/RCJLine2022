@@ -531,10 +531,48 @@ void loop() {
         count++;
       }
     }
-    utils::forward(100);
-    left(180, 100);
-    utils::forward(-100);
-    Raise(3000);
+    //basically 
+    Raise(1500); //half way raise 
+    if(TriangleDETECT() != 0){ 
+        left(90, 100); 
+        if(checkWall(5, 30)){ 
+           right(90, 100);  
+           right(45, 100); 
+           driveDist(250, 100);  
+           right(45, 100);
+           Raise(1500); 
+           break; 
+        } 
+        else { 
+           right(90, 100); 
+           left(45, 100); 
+           driveDist(250, 100);  
+           left(45, 100);
+           Raise(1500); 
+           break; 
+        } 
+        
+    }
+    else {
+       left(90, 100); 
+       if(TriangleDETECT() == 1) {
+           right(180, 100); 
+           while(!checkwall(5, 100))
+           utils::forward(100); 
+           left(180, 100); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
+           Raise(1500); 
+           break; 
+        } 
+       else {
+       right(180, 100); 
+        while(!checkwall(6, 100))
+        utils::forward(100);  
+        right(180, 100);  
+        Raise(1500); 
+        break; 
+       }
+    }
+   //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit 
 
     future = orientationData.orientation.x + 180 < 360 ? orientationData.orientation.x : orientationData.orientation.x - 180;
     
