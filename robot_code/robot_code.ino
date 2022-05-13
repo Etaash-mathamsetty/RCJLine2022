@@ -62,47 +62,6 @@ float getDistCm(){
     return pulseIn(pingPin, HIGH)/26.0/2.0;
 }
 
-void check_lr_intersection(bool *left, bool *right)
-{
-
-  int sums = 0;
-  const int tresh = 2100;
-  for (int i = 0; i < SensorCount / 2; i++)
-  {
-    sums += qtr[i] - white_val;
-
-    // Serial.print(i);
-    //  Serial.print("\t");
-    // Serial.println(qtr[i]);
-  }
-  //  true_count = 0;
-  for (int i = SensorCount / 2; i < SensorCount; i++)
-  {
-    sums -= qtr[i] - white_val;
-    // Serial.print(i);
-    // Serial.print("\t");
-    // Serial.println(qtr[i]);
-  }
-  // bool right = false;
-  if (sums > tresh)
-  {
-    *left = true;
-    lcd.setCursor(0, 3);
-    lcd.print("int 1");
-    // motor1.run(0);
-    // motor2.run(0);
-    // delay(3000);
-  }
-  if (sums < -tresh)
-  {
-    *right = true;
-    lcd.setCursor(0, 3);
-    lcd.print("int 2");
-    //  motor1.run(0);
-    // motor2.run(0);
-    // delay(3000);
-  }
-}
 
 bool linedetect()
 {
@@ -133,6 +92,55 @@ int majority_linedetect()
   return line;
 }
 
+void check_lr_intersection(bool *left, bool *right)
+{
+
+  int sums = 0;
+  const int tresh = 2100;
+  for (int i = 0; i < SensorCount / 2; i++)
+  {
+    sums += qtr[i] - white_val;
+
+    // Serial.print(i);
+    //  Serial.print("\t");
+    // Serial.println(qtr[i]);
+  }
+  //  true_count = 0;
+  for (int i = SensorCount / 2; i < SensorCount; i++)
+  {
+    sums -= qtr[i] - white_val;
+    // Serial.print(i);
+    // Serial.print("\t");
+    // Serial.println(qtr[i]);
+  }
+  // bool right = false;
+  if(majority_linedetect() >= 6){
+    *right = true;
+    *left = true;
+    return;
+  }
+  if (sums > tresh)
+  {
+    *left = true;
+    lcd.setCursor(0, 3);
+    lcd.print("int 1");
+    return;
+    // motor1.run(0);
+    // motor2.run(0);
+    // delay(3000);
+  }
+  if (sums < -tresh)
+  {
+    *right = true;
+    lcd.setCursor(0, 3);
+    lcd.print("int 2");
+    return;
+    //  motor1.run(0);
+    // motor2.run(0);
+    // delay(3000);
+  }
+}
+
 void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
 {
   log::println("raw color:");
@@ -154,7 +162,7 @@ bool color_detect_black()
   tcs.setInterrupt(true);
   print_raw_color(r, g, b, c);
   // random value right now
-  if (c < 160)
+  if (c <= 160)
   {
     return true;
   }
@@ -177,6 +185,8 @@ void turn_left_to_black()
     motor1.run(90);
     motor2.run(90);
   }
+  //small correction
+  right(5, 100);
   utils::stopMotors();
 }
 
@@ -195,6 +205,8 @@ void turn_right_to_black()
     motor1.run(-90);
     motor2.run(-90);
   }
+  //small correction
+  left(5, 100);
   utils::stopMotors();
 }
 
@@ -211,7 +223,10 @@ void left90(bool skip = false, int additional = 0)
     // Serial.println(linedetect());
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
-    if (right)
+   if(left && right){
+      return;
+    }
+    else if (right)
     {
       right90(true, 150 - motor2.getTicks());
       return;
@@ -249,7 +264,9 @@ void right90(bool skip = false, int additional = 0)
     qtr.Update();
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
-    if (left == true)
+    if(left && right)
+      return;
+    else if (left == true)
     {
       left90(true, 150 - motor2.getTicks());
       return;
@@ -261,7 +278,7 @@ void right90(bool skip = false, int additional = 0)
   }
   qtr.Update();
   log::print("Linedetect: ");
-  Serial.println(linedetect());
+  log::println(linedetect());
   if (linedetect())
     return;
   utils::stopMotors();
@@ -280,8 +297,8 @@ int line_trace()
   qtr.Update();
   int32_t line = qtr.get_line();
   line -= 3500;
-  // hack to improve line tracing
-  const float boost = 0.08f;
+  // hack to improve line tracing (not anymore)
+  const float boost = kp_orig;
   if (abs(line) > 2500)
   {
     kp = boost;
@@ -310,42 +327,18 @@ void trace_line()
   lcd.print(right);
   // Serial.println(error-prev_error);
   prev_error = error;
-  if (right == true)
-  {
-    // check green square
-    // do the right turn
-    //    return;
-    //  motor1.run(0);
-    //  motor2.run(0);
-    motor1.stop();
-    motor2.stop();
-    // lcd.clear();
-    // lcd.setCursor(0,0);
-    // lcd.print("please! I just wanna go home");
-    right90();
-
-    // motor1.stop();
-    // motor2.stop();
-    //  delay(3000);
-    // delay(3000);
+  if(right && left){
+    utils::forwardTicks(100, 100);
   }
-  if (left == true)
+  else if (right == true)
   {
-    // check green square
-    // do the left turn
-    //  return;
-    //  motor1.run(0);
-    // motor2.run(0);
-    motor1.stop();
-    motor2.stop();
-    // lcd.clear();
-    // lcd.setCursor(0,0);
-    //  lcd.print("please! I just wanna go home");
+    utils::stopMotors();
+    right90();
+  }
+  else if (left == true)
+  {
+    utils::stopMotors();    
     left90();
-    // delay(3000);
-    //  motor1.stop();
-    //  motor2.stop();
-    //  delay(3000);
   }
   lcd.clear();
 }
@@ -361,12 +354,6 @@ void lcd_display_qtr()
   // delay(150);
 }
 
-void stopMotor()
-{
-  motor1.stop();
-  motor2.stop();
-}
-
 void right(int angle, int speed)
 {
   float orient = 0;
@@ -375,7 +362,7 @@ void right(int angle, int speed)
   int goal = (int)(orientationData.orientation.x + angle);
   orient = orientationData.orientation.x > angle + (goal - 360) ? orientationData.orientation.x - 360 : orientationData.orientation.x;
 
-  if (goal > 360)
+  if (goal >= 360)
   {
 
     goal -= 360;
@@ -398,7 +385,7 @@ void right(int angle, int speed)
       motor1.run(speed);
     }
   }
-  stopMotor();
+  utils::stopMotors();
 }
 
 void left(int angle, int speed)
@@ -433,7 +420,7 @@ void left(int angle, int speed)
       motor1.run(-speed);
     }
   }
-  stopMotor();
+  utils::stopMotors();
 }
 
 uint8_t green_detect()
@@ -653,7 +640,7 @@ void loop()
       delay(100);
       utils::forward(100);
       delay(300);
-      right(140,60);
+      right(60,100);
       turn_right_to_black();
     }
     else{
@@ -673,7 +660,7 @@ void loop()
       delay(100);
       utils::forward(100);
       delay(300);
-      left(140,60);
+      left(60,100);
       turn_left_to_black();
     }
   }
