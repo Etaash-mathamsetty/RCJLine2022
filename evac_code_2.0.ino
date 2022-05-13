@@ -30,6 +30,7 @@ sensors_event_t orientationData;
 
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
+//TURN STRING CLOCKWISE
 Motor motor3(MPORT3);
 
 float kp = 0.07f; //some random number for now
@@ -133,7 +134,7 @@ int majority_linedetect() {
 }
 
 int silver_linedetect() {
-  const float thresh = 100;
+  const float thresh = 130;
   int line = 0;
   for (int i = 0; i < SensorCount; i++) {
     Serial.print(qtr[i]);
@@ -298,12 +299,6 @@ void lcd_display_qtr() {
   //delay(150);
 }
 
-
-void stopMotor() {
-  motor1.stop();
-  motor2.stop();
-}
-
 void right(int angle, int speed) {
   tcaselect(0);
 
@@ -341,7 +336,7 @@ void right(int angle, int speed) {
     }
 
   }
-  stopMotor();
+  utils::stopMotors();
 }
 
 void left(int angle, int speed) {
@@ -376,7 +371,7 @@ void left(int angle, int speed) {
     }
 
   }
-  stopMotor();
+  utils::stopMotors();
 }
 
 void setup() {
@@ -425,6 +420,8 @@ void setup() {
   }
   
   utils::setMotors(&motor1, &motor2);
+  motor1.addBoost(20);
+  motor2.addBoost(20);
 }
 
 void print_color(float r, float g, float b) {
@@ -447,25 +444,26 @@ void driveDist(int encoders, int speed)
   return;
 }
 
-void Raise(int encoders)
+void Raise(int target)
 {
-  motor3.resetTicks();
+ // motor3.resetTicks();
+  int start = motor3.getTicks();
+  while (abs(motor3.getTicks() - start) < target) {
 
-  while (abs(motor3.getTicks()) < encoders) {
-
-    motor3.run(200);
+    motor3.run(-200);
 
   }
   motor3.stop();
   return;
 }
 
-void Lower(int encoders)
+void Lower(int target)
 {
-  motor3.resetTicks();
-  while (abs(motor3.getTicks()) < encoders) {
+  //motor3.resetTicks();
+  int start = motor3.getTicks();
+  while (abs(motor3.getTicks() - start) < target) {
 
-    motor3.run(-200);
+    motor3.run(200);
 
   }
   motor3.stop();
@@ -490,15 +488,20 @@ void loop() {
 
 
   qtr.Update();
-  if (silver_linedetect() > 6) {
+  /*
+  if(silver_linedetect() >= 6){
+    Serial.println("Silver detected");
+    return;
+    }*/
+  //if (silver_linedetect() > 6) {
     Serial.println("Silver detected");
     findPosition(&pos, &room_orientation);
     Serial.println(pos);
     Serial.println(room_orientation);
-    Lower(3000); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
+    Lower(2000); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
     if (room_orientation == 1 && pos != 0) {
       left(90, 80);
-      while (!checkWall(0, 50)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop  
+      while (!checkWall(0, 150)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop  
         utils::forward(100);
       }
       right(180, 80); 
@@ -506,7 +509,7 @@ void loop() {
     }
     else if (room_orientation == 2 && pos != 0) {
       right(90, 80);
-      while (!checkWall(0, 50)) {
+      while (!checkWall(0, 150)) {
         utils::forward(100);
       }
       left(180, 80);
@@ -514,21 +517,21 @@ void loop() {
     if (room_orientation == 1) {
       int count  = 0;
       while (!leave) {
-        while (!checkWall(0, 50)) {
+        while (!checkWall(0, 150)) {
           utils::forward(100);
         }
         if (count % 2) {
           driveDist(100, 100); 
           right(90, 80);
           driveDist(250, 100);
-          leave = checkWall(0, 30);
+          leave = checkWall(0, 100);
           right(90, 80);
         }
         else { 
           driveDist(100, 100); 
           left(90, 80);
           driveDist(250, 100);
-          leave = checkWall(0, 30);
+          leave = checkWall(0, 100);
           left(90, 80);
         }
         count++;
@@ -537,28 +540,28 @@ void loop() {
   else if (room_orientation == 2) {
       int count  = 0;
       while (!leave) {
-        while (!checkWall(0, 50)) {
+        while (!checkWall(0, 150)) {
           utils::forward(100);
         }
         if (count % 2) { 
           driveDist(100, 100);  //needs to ram the ball in 
           left(90, 80);
           driveDist(250, 100);
-          leave = checkWall(0, 30);
+          leave = checkWall(0, 100);
           left(90, 80);
         }
         else {
           driveDist(100, 100); 
           right(90, 80);
           driveDist(250, 100);
-          leave = checkWall(0, 30);
+          leave = checkWall(0, 100);
           right(90, 80);
         }
         count++;
       }
     }
     //basically 
-    Raise(1500); //half way raise 
+    Raise(0); //half way raise 
     if(triangleDETECT() != 0){ 
         left(90, 100); 
         if(checkWall(5, 30)){ 
@@ -566,7 +569,7 @@ void loop() {
            right(45, 100); 
            driveDist(250, 100);  
            right(45, 100);
-           Raise(1500); 
+           Raise(0); 
          
         } 
         else { 
@@ -574,7 +577,7 @@ void loop() {
            left(45, 100); 
            driveDist(250, 100);  
            left(45, 100);
-           Raise(1500); 
+           Raise(0); 
         
         } 
         
@@ -586,7 +589,7 @@ void loop() {
            while(!checkWall(5, 100))
            utils::forward(100); 
            left(180, 100); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
-           Raise(1500); 
+           Raise(0); 
           
         } 
        else {
@@ -594,7 +597,7 @@ void loop() {
         while(!checkWall(6, 100))
         utils::forward(100);  
         right(180, 100);  
-        Raise(1500); 
+        Raise(0); 
       
        }
     }
@@ -622,7 +625,7 @@ void loop() {
         utils::forward(-100);
       }
 
-    }
+    //}
 
   while (true);
 }
@@ -643,9 +646,9 @@ bool front_green(){
 void findPosition(int* triangle_pos, int* room_orient) {
   int triangle_orient;
 
-  driveDist(1000, 100);
+  driveDist(400, 100);
   *room_orient = triangleDETECT();
-  driveDist(1000, -100);
+  driveDist(400, -100);
 
   if (triangle_orient) {
     *triangle_pos = 1;
@@ -660,9 +663,9 @@ void findPosition(int* triangle_pos, int* room_orient) {
     *room_orient = 1;
   }
 
-  driveDist(1000, 100);
+  driveDist(400, 100);
   triangle_orient = triangleDETECT();
-  driveDist(1000, -100);
+  driveDist(400, -100);
 
   if (triangle_orient) {
     *triangle_pos = 2;
