@@ -5,3 +5,5 @@ Motor::run(int speed)
 Motor::stop()  
 Motor::getTicks()  
 Motor::resetTicks()  
+
+#define MOTORSOFF //to disable motors
