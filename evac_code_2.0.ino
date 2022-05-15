@@ -41,6 +41,10 @@ const int base_speed = 80;
 
 #define MUXADDR 0x70
 
+#define FAKE_ROBOT
+
+
+
 void tcaselect(uint8_t i) {
 
   if (i > 7) return;
@@ -300,7 +304,10 @@ void lcd_display_qtr() {
 }
 
 void right(int angle, int speed) {
-  tcaselect(0);
+
+  #ifdef FAKE_ROBOT
+  tcaselect(1);
+  #endif
 
   float orient = 0;
 
@@ -323,16 +330,32 @@ void right(int angle, int speed) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       orient = orientationData.orientation.x > angle + goal ?  orientationData.orientation.x - 360 : orientationData.orientation.x ;
       //Serial.println(orient);
+      #ifndef FAKE_ROBOT
       motor2.run(speed);
       motor1.run(speed);
+      #endif
+
+      #ifdef FAKE_ROBOT
+      motor2.run(speed - 50);
+      motor1.run(speed - 50);
+      #endif
+      
     }
   }
 
   else {
     while ((int)orientationData.orientation.x  < goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      
+      #ifndef FAKE_ROBOT
       motor2.run(speed);
       motor1.run(speed);
+      #endif
+
+      #ifdef FAKE_ROBOT
+      motor2.run(speed - 50);
+      motor1.run(speed - 50);
+      #endif
     }
 
   }
@@ -340,7 +363,9 @@ void right(int angle, int speed) {
 }
 
 void left(int angle, int speed) {
-  tcaselect(0);
+  #ifdef FAKE_ROBOT
+  tcaselect(1);
+  #endif
 
   float orientation = 0;
 
@@ -356,8 +381,15 @@ void left(int angle, int speed) {
     while (orientation > goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       orientation = orientationData.orientation.x < goal - angle ?  orientationData.orientation.x + 360 : orientationData.orientation.x;
+      #ifndef FAKE_ROBOT
       motor2.run(-speed);
       motor1.run(-speed);
+      #endif
+
+      #ifdef FAKE_ROBOT
+      motor2.run(-speed + 50);
+      motor1.run(-speed + 50);
+      #endif
 
     }
   }
@@ -366,8 +398,15 @@ void left(int angle, int speed) {
 
     while ((int)orientationData.orientation.x  > goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      #ifndef FAKE_ROBOT
       motor2.run(-speed);
       motor1.run(-speed);
+      #endif
+
+      #ifdef FAKE_ROBOT
+      motor2.run(-speed + 50);
+      motor1.run(-speed + 50);
+      #endif
     }
 
   }
@@ -390,6 +429,9 @@ void setup() {
   //lcd.backlight();
   //lcd.setCursor(3, 0);
   //lcd.print("Hello World!");
+  #ifdef FAKE_ROBOT
+  tcaselect(1);
+  #endif
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS); 
   
   tcaselect(0);
@@ -418,8 +460,10 @@ void setup() {
   }
   
   utils::setMotors(&motor1, &motor2);
+ #ifndef FAKE_ROBOT
   motor1.addBoost(20);
   motor2.addBoost(20);
+ #endif
 }
 
 void print_color(float r, float g, float b) {
@@ -444,6 +488,8 @@ void driveDist(int encoders, int speed)
 
 void Raise(int target)
 {
+
+ #ifndef FAKE_ROBOT
  // motor3.resetTicks();
   int start = motor3.getTicks();
   while (abs(motor3.getTicks() - start) < target) {
@@ -453,10 +499,12 @@ void Raise(int target)
   }
   motor3.stop();
   return;
+  #endif
 }
 
 void Lower(int target)
 {
+  #ifndef FAKE_ROBOT
   //motor3.resetTicks();
   int start = motor3.getTicks();
   while (abs(motor3.getTicks() - start) < target) {
@@ -466,6 +514,7 @@ void Lower(int target)
   }
   motor3.stop();
   return;
+ #endif
 }
 
 int readDist() {
@@ -495,30 +544,31 @@ void loop() {
     Serial.println("Silver detected");
     return;
     }*/
-
-  //if (silver_linedetect() > 6) {
+  if (silver_linedetect() > 6) {
     Serial.println("Silver detected");
     findPosition(&pos, &room_orientation);
     Serial.println(pos);
+    Serial.print("room_orientation:\t");
     Serial.println(room_orientation);
     Lower(500); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
-    /*
-    if (room_orientation == 1 && pos != 0) {
-      left(90, 150);
+    
+    if (room_orientation == 1 && pos == 3) {
+      right(90, 150);
       while (!checkWall(0, 150)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop  
         utils::forward(100);
       }
       right(180, 150); 
       //what is going on here? 
     }
-    else if (room_orientation == 2 && pos != 0) {
-      right(90, 150);
+    else if (room_orientation == 2 && pos == 3) {
+      left(90, 150);
       while (!checkWall(0, 150)) {
         utils::forward(100);
       }
       left(180, 150);
-    }*/
+    }
     if (room_orientation == 1) {
+      Serial.println("HI");
       int count  = 0;
       while (!leave) {
         while (!checkWall(0, 150)) {
@@ -640,7 +690,7 @@ void loop() {
     
     }
   while (true);
-//}
+  }
 
 }
 
@@ -662,7 +712,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
   *room_orient = triangleDETECT();
   driveDist(400, -100);
 
-  if (triangle_orient) {
+  if (*room_orient) {
     *triangle_pos = 1;
     return;
   }
@@ -707,6 +757,7 @@ bool checkWall(int sensor, int dist) {
 
 int triangleDETECT() {
 
+#ifndef FAKE_ROBOT
   int tofright, tofleft, keydifference;
 
   tcaselect(5);
@@ -737,7 +788,10 @@ int triangleDETECT() {
     Serial.println("flat wall");
     return (0);
   }
-
+#endif
+#ifdef FAKE_ROBOT
+return 0;
+#endif
 }
 
 // put your main code here, to run repeatedly:
