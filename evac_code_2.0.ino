@@ -486,8 +486,6 @@ void loop() {
 
 
 
-  Serial.println("hi");
-
   qtr.Update();
   
 
@@ -497,9 +495,7 @@ void loop() {
     Serial.println("Silver detected");
     return;
     }*/
-    while(true){
-     Serial.println("hi"); 
-     }
+
   //if (silver_linedetect() > 6) {
     Serial.println("Silver detected");
     findPosition(&pos, &room_orientation);
