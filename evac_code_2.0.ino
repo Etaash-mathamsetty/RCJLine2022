@@ -379,6 +379,7 @@ void setup() {
   Wire.begin();
   Serial.begin(9600);
   delay(1000);
+
   //  qtr.calibrate(func);
   //for(int i = 0; i < SensorCount; i++)
   //Serial.println(qtr.getOffValues()[i]);
@@ -389,7 +390,7 @@ void setup() {
   //lcd.backlight();
   //lcd.setCursor(3, 0);
   //lcd.print("Hello World!");
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS); \
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS); 
   
   tcaselect(0);
   tof.setTimeout(500);
@@ -404,16 +405,13 @@ void setup() {
   tof.init();
   tof.startContinuous();
 
-  if (!tcs.begin())
-  {
-    Serial.println("error first!");
-  }
-  tcaselect(3);
+  
+  tcaselect(1);
   if (!tcs.begin())
   {
     Serial.println("error!");
   }
-  tcaselect(4);
+  tcaselect(2);
   if (!tcs.begin())
   {
     Serial.println("error!");
@@ -471,7 +469,7 @@ void Lower(int target)
 }
 
 int readDist() {
-  tcaselect(1);
+  tcaselect(5);
   return tof.readRangeContinuousMillimeters();
 }
 
@@ -484,36 +482,46 @@ void loop() {
   bool leave = false;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  Serial.println(readDist());
+  //Serial.println(readDist());
 
+
+
+  Serial.println("hi");
 
   qtr.Update();
+  
+
+    //triangleDETECT();
   /*
   if(silver_linedetect() >= 6){
     Serial.println("Silver detected");
     return;
     }*/
+    while(true){
+     Serial.println("hi"); 
+     }
   //if (silver_linedetect() > 6) {
     Serial.println("Silver detected");
     findPosition(&pos, &room_orientation);
     Serial.println(pos);
     Serial.println(room_orientation);
-    Lower(2000); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
+    Lower(500); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
+    /*
     if (room_orientation == 1 && pos != 0) {
-      left(90, 80);
+      left(90, 150);
       while (!checkWall(0, 150)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop  
         utils::forward(100);
       }
-      right(180, 80); 
+      right(180, 150); 
       //what is going on here? 
     }
     else if (room_orientation == 2 && pos != 0) {
-      right(90, 80);
+      right(90, 150);
       while (!checkWall(0, 150)) {
         utils::forward(100);
       }
-      left(180, 80);
-    }
+      left(180, 150);
+    }*/
     if (room_orientation == 1) {
       int count  = 0;
       while (!leave) {
@@ -522,17 +530,21 @@ void loop() {
         }
         if (count % 2) {
           driveDist(100, 100); 
-          right(90, 80);
+          right(90, 150);
           driveDist(250, 100);
-          leave = checkWall(0, 100);
-          right(90, 80);
+          Raise(600);
+          leave = triangleDETECT();
+          Lower(1500);
+          right(90, 150);
         }
         else { 
           driveDist(100, 100); 
-          left(90, 80);
+          left(90, 150);
           driveDist(250, 100);
-          leave = checkWall(0, 100);
-          left(90, 80);
+          Raise(600);
+          leave = triangleDETECT();
+          Lower(1500);
+          left(90, 150);
         }
         count++;
       }
@@ -545,17 +557,21 @@ void loop() {
         }
         if (count % 2) { 
           driveDist(100, 100);  //needs to ram the ball in 
-          left(90, 80);
+          left(90, 150);
           driveDist(250, 100);
-          leave = checkWall(0, 100);
-          left(90, 80);
+          Raise(600);
+          leave = triangleDETECT();
+          Lower(1500);
+          left(90, 150);
         }
         else {
           driveDist(100, 100); 
-          right(90, 80);
+          right(90, 150);
           driveDist(250, 100);
-          leave = checkWall(0, 100);
-          right(90, 80);
+          Raise(600);
+          leave = triangleDETECT();
+          Lower(1500);
+          right(90, 150);
         }
         count++;
       }
@@ -563,40 +579,40 @@ void loop() {
     //basically 
     Raise(0); //half way raise 
     if(triangleDETECT() != 0){ 
-        left(90, 100); 
+        left(90, 150); 
         if(checkWall(5, 30)){ 
-           right(90, 100);  
-           right(45, 100); 
+           right(90, 150);  
+           right(45, 150); 
            driveDist(250, 100);  
-           right(45, 100);
+           right(45, 150);
            Raise(0); 
          
         } 
         else { 
-           right(90, 100); 
-           left(45, 100); 
+           right(90, 150); 
+           left(45, 150); 
            driveDist(250, 100);  
-           left(45, 100);
+           left(45, 150);
            Raise(0); 
         
         } 
         
     }
     else {
-       left(90, 100); 
+       left(90, 150); 
        if(triangleDETECT() == 1) {
-           right(180, 100); 
+           right(180, 150); 
            while(!checkWall(5, 100))
            utils::forward(100); 
-           left(180, 100); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
+           left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
            Raise(0); 
           
         } 
        else {
-       right(180, 100); 
+       right(180, 150); 
         while(!checkWall(6, 100))
         utils::forward(100);  
-        right(180, 100);  
+        right(180, 150);  
         Raise(0); 
       
        }
@@ -607,8 +623,8 @@ void loop() {
     
     while(orientationData.orientation.x < future){
       while (!checkWall(5,1200)){
-        motor1.run(75);
-        motor2.run(75);
+        motor1.run(150);
+        motor2.run(150);
       }
 
       do {
@@ -625,15 +641,15 @@ void loop() {
         utils::forward(-100);
       }
 
-    //}
-
+    
+    }
   while (true);
-}
+//}
 
 }
 
 bool front_green(){
-  tcaselect(4);
+  tcaselect(0);
 
   uint16_t r, g, b, c;
   tcs.setInterrupt(false);
@@ -656,10 +672,10 @@ void findPosition(int* triangle_pos, int* room_orient) {
   }
 
   *room_orient = 2;
-  left(90, 80);
+  left(90, 150);
 
   if (checkWall(5, 100)) {
-    right(180, 80);
+    right(180, 150);
     *room_orient = 1;
   }
 
@@ -694,18 +710,18 @@ bool checkWall(int sensor, int dist) {
 }
 
 int triangleDETECT() {
-  int i = random(0, 2);
-  Serial.print("triangleDETECT ");
-  Serial.println(i);
-  return 0;
 
   int tofright, tofleft, keydifference;
 
-  tcaselect(1);
+  tcaselect(5);
   tofright = tof.readRangeContinuousMillimeters();
-  tcaselect(2);
+  tcaselect(6);
   tofleft = tof.readRangeContinuousMillimeters();
 
+  Serial.print(tofleft);
+  Serial.print("\t");
+  Serial.println(tofright);
+  
   keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
 
   Serial.println(keydifference);
@@ -721,11 +737,10 @@ int triangleDETECT() {
     return (2);
 
   }
-  else
+  else{
     Serial.println("flat wall");
-  delay(100);
-  return (0);
-
+    return (0);
+  }
 
 }
 
@@ -801,3 +816,4 @@ int triangleDETECT() {
   }
   }
 */
+
