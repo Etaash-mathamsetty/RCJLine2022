@@ -6,17 +6,17 @@
 #include <LiquidCrystal_I2C.h>
 #include <VL53L0X.h>
 #include "Adafruit_TCS34725.h"
-//#define MotorsOff
+//#define MOTORSOFF
 #include "Motors.h"
 #include "utils.h"
 #define log utils::logger
 //#define LINEOFF
-const int white_val = 150;
+const int white_val = 227;
 
 #define LCD_ADDR 0x27
 const int8_t SensorCount = 8;
 QTRSensors qtr((const uint8_t[]){
-                   A7, A8, A9, A10, A11, A12, A13, A14},
+                   A7, A8, A9, A10, A11, A12, A13, A14}, 
                SensorCount, A6);
 LiquidCrystal_I2C lcd(LCD_ADDR, 20, 4);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
@@ -25,9 +25,9 @@ VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
-const float kp_orig = 0.07f;
+const float kp_orig = 0.09f;
 float kp = kp_orig;
-const float kd = 0.0f;
+const float kd = 0.007f;
 const int base_speed = 80;
 const uint8_t pingPin = A15;
 
@@ -65,7 +65,7 @@ float getDistCm(){
 
 bool linedetect()
 {
-  const float thresh = 380;
+  const float thresh = 420;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -92,49 +92,56 @@ int majority_linedetect()
   return line;
 }
 
+bool center_linedetect(){
+  const float tresh = 420;
+  for(int i = 3; i <= 4; i++){
+    if(qtr[i] > tresh){
+      return true;
+    }
+  }
+}
+
+//#define DISABLE_INT_CHECK
+
 void check_lr_intersection(bool *left, bool *right)
 {
+  #ifdef DISABLE_INT_CHECK
+  *left = false;
+  *right = false;
+  return;
+  #endif
 
-  int sums = 0;
-  const int tresh = 2100;
+  unsigned int sum1 = 0;
+  unsigned int sum2 = 0;
+  //unsigned int sums = 0;
+  const int tresh = 3000;
   for (int i = 0; i < SensorCount / 2; i++)
   {
-    sums += qtr[i] - white_val;
-
-    // Serial.print(i);
-    //  Serial.print("\t");
-    // Serial.println(qtr[i]);
+    sum1 += qtr[i] - white_val;
   }
   //  true_count = 0;
   for (int i = SensorCount / 2; i < SensorCount; i++)
   {
-    sums -= qtr[i] - white_val;
-    // Serial.print(i);
-    // Serial.print("\t");
-    // Serial.println(qtr[i]);
+    sum2 += qtr[i] - white_val;
   }
+  //sums = sum1 - sum2;
   // bool right = false;
-  if(majority_linedetect() >= 6){
-    *right = true;
-    *left = true;
-    return;
-  }
-  if (sums > tresh)
+  if (sum1 >= tresh)
   {
     *left = true;
     lcd.setCursor(0, 3);
     lcd.print("int 1");
-    return;
+    //return;
     // motor1.run(0);
     // motor2.run(0);
     // delay(3000);
   }
-  if (sums < -tresh)
+  if (sum2 >= tresh)
   {
     *right = true;
     lcd.setCursor(0, 3);
     lcd.print("int 2");
-    return;
+   // return;
     //  motor1.run(0);
     // motor2.run(0);
     // delay(3000);
@@ -153,6 +160,7 @@ void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
   log::println(c);
 }
 
+/*
 bool color_detect_black()
 {
   tcaselect(4);
@@ -167,12 +175,12 @@ bool color_detect_black()
     return true;
   }
   return false;
-}
+}*/
 
 void turn_left_to_black()
 {
   // motor2.resetTicks();
-  while (!color_detect_black())
+  /*while (!color_detect_black())
   {
     motor1.run(-100);
     motor2.run(-100);
@@ -184,15 +192,28 @@ void turn_left_to_black()
   while(!color_detect_black()){
     motor1.run(90);
     motor2.run(90);
+  }*/
+  //int32_t fast_abs(int32_t num)
+  //return (num & (INT32_MAX >> 1));
+  qtr.Update();
+  while(!(center_linedetect())){
+    qtr.Update();
+    motor1.run(-100);
+    motor2.run(-100);
+  }
+  while(abs(qtr.get_center()) >= 200){
+    qtr.Update();
+    motor1.run(-100);
+    motor2.run(-100);
   }
   //small correction
-  right(5, 100);
+  left(5, 100);
   utils::stopMotors();
 }
 
 void turn_right_to_black()
 {
-  while (!color_detect_black())
+  /*while (!color_detect_black())
   {
     motor1.run(100);
     motor2.run(100);
@@ -204,9 +225,20 @@ void turn_right_to_black()
   while(!color_detect_black()){
     motor1.run(-90);
     motor2.run(-90);
+  }*/
+  qtr.Update();
+  while(!(center_linedetect())){
+    qtr.Update();
+    motor1.run(-100);
+    motor2.run(-100);
+  }
+  while(abs(qtr.get_center()) >= 200){
+    qtr.Update();
+    motor1.run(100);
+    motor2.run(100);
   }
   //small correction
-  left(5, 100);
+  right(5, 100);
   utils::stopMotors();
 }
 
@@ -216,7 +248,8 @@ void left90(bool skip = false, int additional = 0)
 {
   log::println("left90");
   motor2.resetTicks();
-  while (motor2.getTicks() <= 150 && linedetect() && !skip)
+  const int ticks_forward = 200;
+  while (motor2.getTicks() <= ticks_forward && linedetect() && !skip)
   {
     utils::forward(100);
     qtr.Update();
@@ -228,12 +261,12 @@ void left90(bool skip = false, int additional = 0)
     }
     else if (right)
     {
-      right90(true, 150 - motor2.getTicks());
+      right90(true, ticks_forward - motor2.getTicks());
       return;
     }
     // recheck intersection while moving forward what you see could change
   }
-  while (motor2.getTicks() <= additional)
+  while (motor2.getTicks() <= additional && linedetect())
   {
     utils::forward(100);
   }
@@ -245,10 +278,7 @@ void left90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(100);
   utils::resetTicks();
-  while (motor1.getTicks() < 40)
-  {
-    utils::forward(-100);
-  }
+  utils::forwardTicks(100, 50);
   turn_left_to_black();
   //utils::forwardTicks(-100,30);
 }
@@ -257,7 +287,8 @@ void right90(bool skip = false, int additional = 0)
 {
   log::println("right90");
   motor2.resetTicks();
-  while (motor2.getTicks() <= 150 && linedetect() && !skip)
+  const int ticks_forward = 200;
+  while (motor2.getTicks() <= ticks_forward && linedetect() && !skip)
   {
     motor1.run(-100);
     motor2.run(100);
@@ -268,11 +299,11 @@ void right90(bool skip = false, int additional = 0)
       return;
     else if (left == true)
     {
-      left90(true, 150 - motor2.getTicks());
+      left90(true, ticks_forward - motor2.getTicks());
       return;
     }
   }
-  while (motor2.getTicks() <= additional)
+  while (motor2.getTicks() <= additional && linedetect())
   {
     utils::forward(100);
   }
@@ -284,10 +315,7 @@ void right90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(100);
   utils::resetTicks();
-  while (motor1.getTicks() < 40)
-  {
-    utils::forward(-100);
-  }
+  utils::forwardTicks(100,50);
   turn_right_to_black();
  // utils::forwardTicks(-100, 30);
 }
@@ -486,9 +514,10 @@ void green90l()
   utils::stopMotors();
   delay(200);
   utils::resetTicks();
-  while(motor1.getTicks() <= 40){
-      utils::forward(-100);
-  }
+ // while(motor1.getTicks() <= 40){
+  //    utils::forward(-100);
+  //}
+  utils::forwardTicks(100,50);
   utils::stopMotors();
   delay(60);
   left(60, 100);
@@ -531,9 +560,10 @@ void green90r()
   utils::stopMotors();
   delay(200);
   utils::resetTicks();
-  while(motor1.getTicks() <= 40){
-    utils::forward(-100);
-  }
+  //while(motor1.getTicks() <= 40){
+  //  utils::forward(-100);
+  //}
+  utils::forwardTicks(100,50);
   utils::stopMotors();
   delay(60);
   right(60, 100);
@@ -578,11 +608,11 @@ void setup()
   {
     Serial.println("error!");
   }
-  tcaselect(4);
-  if (!tcs.begin())
-  {
-    Serial.println("error!");
-  }
+ // tcaselect(4);
+ // if (!tcs.begin())
+ // {
+ //   Serial.println("error!");
+ // }
   utils::setMotors(&motor1, &motor2);
 }
 
@@ -616,7 +646,7 @@ void loop()
   float org_dist = distance;
   log::println(distance);
   if(distance < 25){
-    left(90,100);
+    left(90,120);
     delay(500);
     log::print("dist after turn: ");
     distance = getDistCm() + 14;
@@ -667,9 +697,9 @@ void loop()
 
   tcaselect(2);
   float r, g, b;
-  tcs.setInterrupt(false);
+  //tcs.setInterrupt(false);
   tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(true);
+  //tcs.setInterrupt(true);
   bool gleft = false, gright = false;
   if (g >= 100 && r < 100 && b < 100)
   {
@@ -677,9 +707,9 @@ void loop()
   }
   print_color(r, g, b);
   tcaselect(3);
-  tcs.setInterrupt(false);
+  //tcs.setInterrupt(false);
   tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(true);
+  //tcs.setInterrupt(true);
   print_color(r, g, b);
 
   if (g >= 100 && r < 100 && b < 100)
