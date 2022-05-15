@@ -6,4 +6,4 @@ Motor::stop()
 Motor::getTicks()  
 Motor::resetTicks()  
 
-#define MOTORSOFF //to disable motors
+#define MOTORSOFF //to disable motors (place before inclusion in your file)
