@@ -812,4 +812,77 @@ int triangleDETECT() {
   }
   }
 */
+/* 
+void loop() {
+  Raise(0); //half way raise 
+    if(triangleDETECT() != 0){ 
+        left(90, 150); 
+        if(checkWall(5, 100)){ 
+           right(90, 150);  
+           right(45, 150); 
+           driveDist(500, 100);  
+           right(45, 150);
+           Raise(600); 
+         
+        } 
+        else { 
+           right(90, 150); 
+           left(45, 150); 
+           driveDist(500, 100);  
+           left(45, 150);
+           Raise(600); 
+        
+        } 
+        
+    }
+    else {
+       left(90, 150); 
+       if(triangleDETECT() == 1) {
+           right(180, 150); 
+           while(!checkWall(5, 100))
+           utils::forward(100); 
+           left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
+           Raise(600); 
+          
+        } 
+       else {
+       right(180, 150); 
+        while(!checkWall(6, 100))
+        utils::forward(100);  
+        right(180, 150);  
+        Raise(600); 
+      
+       }
+    }
+   //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit 
 
+    float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
+    
+    while(orientationData.orientation.x < future){
+      while (!checkWall(5,1200)){
+        motor1.run(150);
+        motor2.run(150);
+      }
+
+      do {
+        utils::resetTicks();
+        utils::forward(100);
+
+      } while(silver_linedetect() > 6 && !front_green());
+
+      if (front_green()){
+        break;
+      }
+
+      while(motor1.getTicks() > 0){
+        utils::forward(-100);
+      }
+
+    
+    }
+  while (true);
+
+
+}
+*/ 
+// test section for exit and dropping balls. 
