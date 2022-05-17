@@ -646,7 +646,26 @@ void loop() {
       }
       count++;
     }
-    delay(10000);
+    
+    delay(1000);
+    Raise(600);
+    #ifndef FAKE_ROBOT
+
+    while(!checkWall(5, 150) && !checkWall(6, 150))
+      utils::forward(100);
+    #endif
+
+    #ifdef FAKE_ROBOT
+       while(!checkWall(0, 150))
+        utils::forward(100);
+    #endif
+
+    if(leave == 1)
+      left(135, 150);
+    else
+      right(135, 150);
+
+    Raise(0);
     
     
   }
@@ -735,9 +754,27 @@ void loop() {
       }
       count++;
     }
-    delay(10000);
-
     
+    delay(1000);
+    Raise(600);
+    #ifndef FAKE_ROBOT
+
+    while(!checkWall(5, 150) && !checkWall(6, 150))
+      utils::forward(100);
+    #endif
+
+    #ifdef FAKE_ROBOT
+       while(!checkWall(0, 150))
+        utils::forward(100);
+    #endif
+
+    if(leave == 1)
+      left(135, 150);
+    else
+      right(135, 150);
+
+    Raise(0);
+
   }
   //basically
   /*
@@ -951,7 +988,7 @@ int triangleDETECT3() {
  
   times++;
   Serial.println(times);
-  return random(0,3);
+  return 1;
   //return (times/2) >= maximum;
 }
 #endif
