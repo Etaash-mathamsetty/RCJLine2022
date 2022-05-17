@@ -207,7 +207,7 @@ void turn_left_to_black()
     motor2.run(-100);
   }
   //small correction
-  left(5, 100);
+  left(7, 100);
   utils::stopMotors();
 }
 
@@ -238,7 +238,7 @@ void turn_right_to_black()
     motor2.run(100);
   }
   //small correction
-  right(5, 100);
+  right(7, 100);
   utils::stopMotors();
 }
 
