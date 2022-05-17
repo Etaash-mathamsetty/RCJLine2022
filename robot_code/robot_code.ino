@@ -65,7 +65,7 @@ float getDistCm(){
 
 bool linedetect()
 {
-  const float thresh = 420;
+  const float thresh = 600;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -93,7 +93,7 @@ int majority_linedetect()
 }
 
 bool center_linedetect(){
-  const float tresh = 420;
+  const float tresh = 600;
   for(int i = 3; i <= 4; i++){
     if(qtr[i] > tresh){
       return true;
@@ -238,6 +238,9 @@ void left90(bool skip = false, int additional = 0)
   }
   utils::stopMotors();
   delay(100);
+  qtr.Update();
+  if(linedetect())
+    return;
   utils::resetTicks();
   utils::forwardTicks(100, 50);
   turn_left_to_black();
@@ -271,6 +274,9 @@ void right90(bool skip = false, int additional = 0)
   }
   utils::stopMotors();
   delay(100);
+  qtr.Update();
+  if(linedetect())
+    return;
   utils::resetTicks();
   utils::forwardTicks(100,50);
   turn_right_to_black();
