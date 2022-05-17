@@ -41,7 +41,7 @@ const int base_speed = 80;
 
 #define MUXADDR 0x70
 
-#define FAKE_ROBOT
+//#define FAKE_ROBOT
 
 
 
@@ -532,18 +532,22 @@ void loop() {
 
   //Serial.println(readDist());
 
-/*
-  if(checkExit(0, 150, 2)){
-      while(true);
-  }
-  while(true){
-    right(90, 150);
-  }*/
+  /*
+    if(checkExit(0, 150, 2)){
+        while(true);
+    }
+    while(true){
+      right(90, 150);
+    }*/
 
   qtr.Update();
+  // 1500 is required to let down the intake completely
+  /*
+  Lower(1350);
+  Raise(1350);
+  delay(1000);
+  while(true);*/
 
-
-  //triangleDETECT();
   /*
     if(silver_linedetect() >= 6){
     Serial.println("Silver detected");
@@ -587,40 +591,40 @@ void loop() {
 
       //old_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-      
+
       while (!checkWall(0, 150)) {
         utils::forward(100);
       }
       /*
-      new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+        new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
 
-      if (old_orient - new_orient >= 180)
+        if (old_orient - new_orient >= 180)
         new_orient += 360;
-      else if( new_orient - old_orient >= 180)
+        else if( new_orient - old_orient >= 180)
         old_orient += 360;
 
-      if (abs(old_orient - new_orient) > 40)
+        if (abs(old_orient - new_orient) > 40)
         while(true);
       */
       //tried but failed to use the BNO to detect the triangle. Unfortunately, the treads were too good at climbing into the triangle without changing orientation lmao
-      
+
       if (count % 2) {
-        
+
         driveDist(100, 100);
         right(90, 150);
         driveDist(250, 100);
         right(90, 150);
         Raise(600);
-        
-        #ifndef FAKE_ROBOT
-        leave = triangleDETECT();
-        #endif
 
-        #ifdef FAKE_ROBOT
+#ifndef FAKE_ROBOT
+        leave = triangleDETECT();
+#endif
+
+#ifdef FAKE_ROBOT
         leave = triangleDETECT3();
-        #endif
-        
+#endif
+
 
         Lower(1500);
 
@@ -633,41 +637,61 @@ void loop() {
         left(90, 150);
         Raise(600);
 
-        #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
         leave = triangleDETECT();
-        #endif
+#endif
 
-        #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
         leave = triangleDETECT3();
-        #endif
-         
+#endif
+
         Lower(1500);
-        
+
       }
       count++;
     }
-    
+
     delay(1000);
     Raise(600);
-    #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
 
-    while(!checkWall(5, 150) && !checkWall(6, 150))
+    while (!checkWall(5, 150) && !checkWall(6, 150))
       utils::forward(100);
-    #endif
+#endif
 
-    #ifdef FAKE_ROBOT
-       while(!checkWall(0, 150))
-        utils::forward(100);
-    #endif
+#ifdef FAKE_ROBOT
+    while (!checkWall(0, 150))
+      utils::forward(100);
+#endif
 
-    if(leave == 1)
+    if (leave == 1)
       left(135, 150);
     else
       right(135, 150);
 
     Raise(0);
-    
-    
+
+    right(45, 150);
+
+    while (true) {
+      while (silver_linedetect() < 6 || checkWall(5, 150) || front_green()) {
+        utils::forward(100);
+      }
+      #ifndef FAKE_ROBOT
+      
+      if(leave_room(5, 300))
+        break;
+      #endif
+
+      #ifdef FAKE_ROBOT
+
+      if(leave_room(0, 300))
+        break;
+      #endif
+      
+    }
+
+
   }
   else if (room_orientation == 2) {
 
@@ -695,11 +719,11 @@ void loop() {
 
 
     while (!leave) {
-   
-      
+
+
       //old_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-      
+
       while (!checkWall(0, 150)) {
         utils::forward(100);
       }
@@ -707,16 +731,16 @@ void loop() {
       /*new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
 
-      if (old_orient - new_orient >= 180)
+        if (old_orient - new_orient >= 180)
         new_orient += 360;
-      else if( new_orient - old_orient >= 180)
+        else if( new_orient - old_orient >= 180)
         old_orient += 360;
 
-      if (abs(old_orient - new_orient) > 40)
+        if (abs(old_orient - new_orient) > 40)
         while(true);
       */
 
-      
+
       if (!(count % 2)) {
         driveDist(100, 100);
         right(90, 150);
@@ -724,13 +748,13 @@ void loop() {
         right(90, 150);
         Raise(600);
 
-        #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
         leave = triangleDETECT();
-        #endif
+#endif
 
-        #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
         leave = triangleDETECT3();
-        #endif
+#endif
 
 
         Lower(1500);
@@ -742,44 +766,65 @@ void loop() {
         left(90, 150);
         Raise(600);
 
-        #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
         leave = triangleDETECT();
-        #endif
+#endif
 
-        #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
         leave = triangleDETECT3();
-        #endif
+#endif
 
         Lower(1500);
       }
       count++;
     }
-    
+
     delay(1000);
     Raise(600);
-    #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
 
-    while(!checkWall(5, 150) && !checkWall(6, 150))
+    while (!checkWall(5, 150) && !checkWall(6, 150))
       utils::forward(100);
-    #endif
+#endif
 
-    #ifdef FAKE_ROBOT
-       while(!checkWall(0, 150))
-        utils::forward(100);
-    #endif
+#ifdef FAKE_ROBOT
+    while (!checkWall(0, 150))
+      utils::forward(100);
+#endif
 
-    if(leave == 1)
+    if (leave == 1)
       left(135, 150);
     else
       right(135, 150);
 
     Raise(0);
 
+    right(45, 150);
+
+    while (true) {
+      while (silver_linedetect() < 6 || checkWall(5, 150) || front_green()) {
+        utils::forward(100);
+      }
+
+      #ifndef FAKE_ROBOT
+      if(leave_room(5, 300))
+        break;
+      #endif
+
+      #ifdef FAKE_ROBOT
+
+      if(leave_room(0, 300))
+        break;
+      #endif
+    }
+
+
+
   }
   //basically
   /*
-  Raise(0); //half way raise
-  if (triangleDETECT() != 0) {
+    Raise(0); //half way raise
+    if (triangleDETECT() != 0) {
     left(90, 150);
     if (checkWall(5, 30)) {
       right(90, 150);
@@ -798,8 +843,8 @@ void loop() {
 
     }
 
-  }
-  else {
+    }
+    else {
     left(90, 150);
     if (triangleDETECT() == 1) {
       right(180, 150);
@@ -817,12 +862,12 @@ void loop() {
       Raise(0);
 
     }
-  }
-  //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit
+    }
+    //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit
 
-  float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
-  
-  while (orientationData.orientation.x < future) {
+    float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
+
+    while (orientationData.orientation.x < future) {
     while (!checkWall(5, 1200)) {
       motor1.run(150);
       motor2.run(150);
@@ -843,12 +888,43 @@ void loop() {
     }
 
 
-  }*/
+    }*/
   while (true);
 
 }
 
 bool front_green() {
+
+
+#ifndef FAKE_ROBOT
+  tcaselect(0);
+
+  uint16_t r, g, b, c;
+  tcs.setInterrupt(false);
+  tcs.getRawData(&r, &g, &b, &c);
+  tcs.setInterrupt(true);
+
+  return g >= 100 && r < 100 && b < 100;
+#endif
+#ifdef FAKE_ROBOT
+  return false;
+#endif
+}
+
+bool forward_green() {
+
+  utils::resetTicks();
+
+  while (motor1.getTicks() < 200 or front_green())
+    utils::forward(100);
+
+  if (front_green())
+    return true;
+  else {
+    while (motor1.getTicks() > 0)
+      utils::forward(-100);
+  }
+
 #ifndef FAKE_ROBOT
   tcaselect(0);
 
@@ -920,6 +996,25 @@ bool checkWall(int sensor, int dist) {
 
 }
 
+bool leave_room(int sensor, int dist) {
+
+  if (!checkWall(sensor, dist)) {
+    if (forward_green())
+      return true;
+  }
+
+  right(90, 150);
+
+  if (!checkWall(sensor, dist)) {
+    if ( forward_green())
+      return true;
+  }
+
+  right(180, 150);
+
+  return false;
+}
+
 bool checkExit(int sensor, int dist, int room_orientation) {
 
   bool initial_wall;
@@ -952,16 +1047,16 @@ int triangleDETECT() {
   keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
 
   Serial.println(keydifference);
-  if (keydifference >= 40) {
-
-    Serial.println("triangle1");
-    return (1);
-
-  }
-  else if (keydifference <= -40) {
+  if (keydifference >= 25) {
 
     Serial.println("triangle2");
     return (2);
+
+  }
+  else if (keydifference <= -25) {
+
+    Serial.println("triangle1");
+    return (1);
 
   }
   else {
@@ -981,11 +1076,11 @@ const int maximum = 4;
 
 
 int triangleDETECT2() {
-  return 2;
+  return 1;
 }
 
 int triangleDETECT3() {
- 
+
   times++;
   Serial.println(times);
   return 1;
