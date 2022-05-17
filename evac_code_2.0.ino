@@ -305,9 +305,9 @@ void lcd_display_qtr() {
 
 void right(int angle, int speed) {
 
-  #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
   tcaselect(1);
-  #endif
+#endif
 
   float orient = 0;
 
@@ -330,32 +330,32 @@ void right(int angle, int speed) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       orient = orientationData.orientation.x > angle + goal ?  orientationData.orientation.x - 360 : orientationData.orientation.x ;
       //Serial.println(orient);
-      #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
       motor2.run(speed);
       motor1.run(speed);
-      #endif
+#endif
 
-      #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
       motor2.run(speed - 50);
       motor1.run(speed - 50);
-      #endif
-      
+#endif
+
     }
   }
 
   else {
     while ((int)orientationData.orientation.x  < goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      
-      #ifndef FAKE_ROBOT
+
+#ifndef FAKE_ROBOT
       motor2.run(speed);
       motor1.run(speed);
-      #endif
+#endif
 
-      #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
       motor2.run(speed - 50);
       motor1.run(speed - 50);
-      #endif
+#endif
     }
 
   }
@@ -363,9 +363,9 @@ void right(int angle, int speed) {
 }
 
 void left(int angle, int speed) {
-  #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
   tcaselect(1);
-  #endif
+#endif
 
   float orientation = 0;
 
@@ -381,15 +381,15 @@ void left(int angle, int speed) {
     while (orientation > goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
       orientation = orientationData.orientation.x < goal - angle ?  orientationData.orientation.x + 360 : orientationData.orientation.x;
-      #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
       motor2.run(-speed);
       motor1.run(-speed);
-      #endif
+#endif
 
-      #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
       motor2.run(-speed + 50);
       motor1.run(-speed + 50);
-      #endif
+#endif
 
     }
   }
@@ -398,15 +398,15 @@ void left(int angle, int speed) {
 
     while ((int)orientationData.orientation.x  > goal) {
       bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
       motor2.run(-speed);
       motor1.run(-speed);
-      #endif
+#endif
 
-      #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
       motor2.run(-speed + 50);
       motor1.run(-speed + 50);
-      #endif
+#endif
     }
 
   }
@@ -429,11 +429,11 @@ void setup() {
   //lcd.backlight();
   //lcd.setCursor(3, 0);
   //lcd.print("Hello World!");
-  #ifdef FAKE_ROBOT
+#ifdef FAKE_ROBOT
   tcaselect(1);
-  #endif
-  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS); 
-  
+#endif
+  bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+
   tcaselect(0);
   tof.setTimeout(500);
   tof.init();
@@ -447,7 +447,7 @@ void setup() {
   tof.init();
   tof.startContinuous();
 
-  
+
   tcaselect(1);
   if (!tcs.begin())
   {
@@ -458,12 +458,12 @@ void setup() {
   {
     Serial.println("error!");
   }
-  
+
   utils::setMotors(&motor1, &motor2);
- #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
   motor1.addBoost(20);
   motor2.addBoost(20);
- #endif
+#endif
 }
 
 void print_color(float r, float g, float b) {
@@ -489,8 +489,8 @@ void driveDist(int encoders, int speed)
 void Raise(int target)
 {
 
- #ifndef FAKE_ROBOT
- // motor3.resetTicks();
+#ifndef FAKE_ROBOT
+  // motor3.resetTicks();
   int start = motor3.getTicks();
   while (abs(motor3.getTicks() - start) < target) {
 
@@ -499,12 +499,12 @@ void Raise(int target)
   }
   motor3.stop();
   return;
-  #endif
+#endif
 }
 
 void Lower(int target)
 {
-  #ifndef FAKE_ROBOT
+#ifndef FAKE_ROBOT
   //motor3.resetTicks();
   int start = motor3.getTicks();
   while (abs(motor3.getTicks() - start) < target) {
@@ -514,12 +514,7 @@ void Lower(int target)
   }
   motor3.stop();
   return;
- #endif
-}
-
-int readDist() {
-  tcaselect(5);
-  return tof.readRangeContinuousMillimeters();
+#endif
 }
 
 void loop() {
@@ -528,173 +523,296 @@ void loop() {
   float Kp_obs = 3.5;
   int pos;
   int room_orientation;
-  bool leave = false;
+  int leave = 0;
+  int exit_tile;
+  float old_orient;
+  float new_orient;
+  float comparison;
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
   //Serial.println(readDist());
 
-
+/*
+  if(checkExit(0, 150, 2)){
+      while(true);
+  }
+  while(true){
+    right(90, 150);
+  }*/
 
   qtr.Update();
-  
 
-    //triangleDETECT();
+
+  //triangleDETECT();
   /*
-  if(silver_linedetect() >= 6){
+    if(silver_linedetect() >= 6){
     Serial.println("Silver detected");
     return;
     }*/
-  if (silver_linedetect() > 6) {
-    Serial.println("Silver detected");
-    findPosition(&pos, &room_orientation);
-    Serial.println(pos);
-    Serial.print("room_orientation:\t");
-    Serial.println(room_orientation);
-    Lower(500); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball 
-    
-    if (room_orientation == 1 && pos == 3) {
-      right(90, 150);
-      while (!checkWall(0, 150)) { //checkwall will probably need to be changed once we use the actual robot, because the tof sensor is located inside of the scoop  
-        utils::forward(100);
-      }
-      right(180, 150); 
-      //what is going on here? 
+  //while (silver_linedetect() <= 6)
+
+  Serial.println("Silver detected");
+  findPosition(&pos, &room_orientation);
+  Serial.println(pos);
+  Serial.print("room_orientation:\t");
+  Serial.println(room_orientation);
+  Lower(500); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
+
+
+  if (room_orientation == 1) {
+
+    int count  = 0;
+
+    left(90, 150);
+
+    while (!checkWall(0, 150) || front_green())
+      utils::forward(100);
+
+    if (checkExit(0, 150, room_orientation)) {
+      if (pos == 1)
+        exit_tile == 2;
+      else
+        exit_tile == 1;
     }
-    else if (room_orientation == 2 && pos == 3) {
-      left(90, 150);
+    else {
+      exit_tile == 3;
+    }
+
+    delay(1000);
+    right(180, 150);
+    driveDist(250, 100);
+    right(90, 150);
+
+    while (!leave) {
+
+      //old_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+      
       while (!checkWall(0, 150)) {
         utils::forward(100);
       }
-      left(180, 150);
-    }
-    if (room_orientation == 1) {
-      Serial.println("HI");
-      int count  = 0;
-      while (!leave) {
-        while (!checkWall(0, 150)) {
-          utils::forward(100);
-        }
-        if (count % 2) {
-          driveDist(100, 100); 
-          right(90, 150);
-          driveDist(250, 100);
-          Raise(600);
-          leave = triangleDETECT();
-          Lower(1500);
-          right(90, 150);
-        }
-        else { 
-          driveDist(100, 100); 
-          left(90, 150);
-          driveDist(250, 100);
-          Raise(600);
-          leave = triangleDETECT();
-          Lower(1500);
-          left(90, 150);
-        }
-        count++;
+      /*
+      new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+      if (old_orient - new_orient >= 180)
+        new_orient += 360;
+      else if( new_orient - old_orient >= 180)
+        old_orient += 360;
+
+      if (abs(old_orient - new_orient) > 40)
+        while(true);
+      */
+      //tried but failed to use the BNO to detect the triangle. Unfortunately, the treads were too good at climbing into the triangle without changing orientation lmao
+      
+      if (count % 2) {
+        
+        driveDist(100, 100);
+        right(90, 150);
+        driveDist(250, 100);
+        right(90, 150);
+        Raise(600);
+        
+        #ifndef FAKE_ROBOT
+        leave = triangleDETECT();
+        #endif
+
+        #ifdef FAKE_ROBOT
+        leave = triangleDETECT3();
+        #endif
+        
+
+        Lower(1500);
+
+
       }
-    }
-  else if (room_orientation == 2) {
-      int count  = 0;
-      while (!leave) {
-        while (!checkWall(0, 150)) {
-          utils::forward(100);
-        }
-        if (count % 2) { 
-          driveDist(100, 100);  //needs to ram the ball in 
-          left(90, 150);
-          driveDist(250, 100);
-          Raise(600);
-          leave = triangleDETECT();
-          Lower(1500);
-          left(90, 150);
-        }
-        else {
-          driveDist(100, 100); 
-          right(90, 150);
-          driveDist(250, 100);
-          Raise(600);
-          leave = triangleDETECT();
-          Lower(1500);
-          right(90, 150);
-        }
-        count++;
-      }
-    }
-    //basically 
-    Raise(0); //half way raise 
-    if(triangleDETECT() != 0){ 
-        left(90, 150); 
-        if(checkWall(5, 30)){ 
-           right(90, 150);  
-           right(45, 150); 
-           driveDist(250, 100);  
-           right(45, 150);
-           Raise(0); 
+      else {
+        driveDist(100, 100);
+        left(90, 150);
+        driveDist(250, 100);
+        left(90, 150);
+        Raise(600);
+
+        #ifndef FAKE_ROBOT
+        leave = triangleDETECT();
+        #endif
+
+        #ifdef FAKE_ROBOT
+        leave = triangleDETECT3();
+        #endif
          
-        } 
-        else { 
-           right(90, 150); 
-           left(45, 150); 
-           driveDist(250, 100);  
-           left(45, 150);
-           Raise(0); 
+        Lower(1500);
         
-        } 
-        
+      }
+      count++;
+    }
+    delay(10000);
+    
+    
+  }
+  else if (room_orientation == 2) {
+
+    int count  = 0;
+
+    right(90, 150);
+
+    while (!checkWall(0, 150) || front_green())
+      utils::forward(100);
+
+    if (checkExit(0, 150, room_orientation)) {
+      if (pos == 1)
+        exit_tile == 2;
+      else
+        exit_tile == 1;
     }
     else {
-       left(90, 150); 
-       if(triangleDETECT() == 1) {
-           right(180, 150); 
-           while(!checkWall(5, 100))
-           utils::forward(100); 
-           left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
-           Raise(0); 
-          
-        } 
-       else {
-       right(180, 150); 
-        while(!checkWall(6, 100))
-        utils::forward(100);  
-        right(180, 150);  
-        Raise(0); 
+      exit_tile == 3;
+    }
+
+    delay(1000);
+    left(180, 150);
+    driveDist(250, 100);
+    left(90, 150);
+
+
+    while (!leave) {
+   
       
-       }
-    }
-   //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit 
+      //old_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-    float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
-    
-    while(orientationData.orientation.x < future){
-      while (!checkWall(5,1200)){
-        motor1.run(150);
-        motor2.run(150);
-      }
-
-      do {
-        utils::resetTicks();
+      
+      while (!checkWall(0, 150)) {
         utils::forward(100);
-
-      } while(silver_linedetect() > 6 && !front_green());
-
-      if (front_green()){
-        break;
       }
 
-      while(motor1.getTicks() > 0){
-        utils::forward(-100);
+      /*new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+      if (old_orient - new_orient >= 180)
+        new_orient += 360;
+      else if( new_orient - old_orient >= 180)
+        old_orient += 360;
+
+      if (abs(old_orient - new_orient) > 40)
+        while(true);
+      */
+
+      
+      if (!(count % 2)) {
+        driveDist(100, 100);
+        right(90, 150);
+        driveDist(250, 100);
+        right(90, 150);
+        Raise(600);
+
+        #ifndef FAKE_ROBOT
+        leave = triangleDETECT();
+        #endif
+
+        #ifdef FAKE_ROBOT
+        leave = triangleDETECT3();
+        #endif
+
+
+        Lower(1500);
       }
+      else {
+        driveDist(100, 100);  //needs to ram the ball in
+        left(90, 150);
+        driveDist(250, 100);
+        left(90, 150);
+        Raise(600);
+
+        #ifndef FAKE_ROBOT
+        leave = triangleDETECT();
+        #endif
+
+        #ifdef FAKE_ROBOT
+        leave = triangleDETECT3();
+        #endif
+
+        Lower(1500);
+      }
+      count++;
+    }
+    delay(10000);
 
     
-    }
-  while (true);
   }
+  //basically
+  /*
+  Raise(0); //half way raise
+  if (triangleDETECT() != 0) {
+    left(90, 150);
+    if (checkWall(5, 30)) {
+      right(90, 150);
+      right(45, 150);
+      driveDist(250, 100);
+      right(45, 150);
+      Raise(0);
+
+    }
+    else {
+      right(90, 150);
+      left(45, 150);
+      driveDist(250, 100);
+      left(45, 150);
+      Raise(0);
+
+    }
+
+  }
+  else {
+    left(90, 150);
+    if (triangleDETECT() == 1) {
+      right(180, 150);
+      while (!checkWall(5, 100))
+        utils::forward(100);
+      left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it
+      Raise(0);
+
+    }
+    else {
+      right(180, 150);
+      while (!checkWall(6, 100))
+        utils::forward(100);
+      right(180, 150);
+      Raise(0);
+
+    }
+  }
+  //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit
+
+  float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
+  
+  while (orientationData.orientation.x < future) {
+    while (!checkWall(5, 1200)) {
+      motor1.run(150);
+      motor2.run(150);
+    }
+
+    do {
+      utils::resetTicks();
+      utils::forward(100);
+
+    } while (silver_linedetect() > 6 && !front_green());
+
+    if (front_green()) {
+      break;
+    }
+
+    while (motor1.getTicks() > 0) {
+      utils::forward(-100);
+    }
+
+
+  }*/
+  while (true);
 
 }
 
-bool front_green(){
+bool front_green() {
+#ifndef FAKE_ROBOT
   tcaselect(0);
 
   uint16_t r, g, b, c;
@@ -703,6 +821,10 @@ bool front_green(){
   tcs.setInterrupt(true);
 
   return g >= 100 && r < 100 && b < 100;
+#endif
+#ifdef FAKE_ROBOT
+  return false;
+#endif
 }
 
 void findPosition(int* triangle_pos, int* room_orient) {
@@ -726,32 +848,53 @@ void findPosition(int* triangle_pos, int* room_orient) {
   }
 
   driveDist(400, 100);
+#ifndef FAKE_ROBOT
   triangle_orient = triangleDETECT();
+#endif
+#ifdef FAKE_ROBOT
+  triangle_orient = triangleDETECT2();
+#endif
+
   driveDist(400, -100);
 
   if (triangle_orient) {
     *triangle_pos = 2;
-    *room_orient = triangle_orient; 
-    return; 
+    *room_orient = triangle_orient;
+    return;
   }
   else {
-    *triangle_pos = 3; 
-    return; 
+    *triangle_pos = 3;
+    return;
   }
 
 
 }
-//numbers used for checkwall might need to be changed too because tof is inside the scoop 
+//numbers used for checkwall might need to be changed too because tof is inside the scoop
 bool checkWall(int sensor, int dist) {
 
   int tof_dist;
-  // the scoop tof is located at 0  
-  // the other tofs are at 5, 6 
+  // the scoop tof is located at 0
+  // the other tofs are at 5, 6
   tcaselect(sensor);
   tof_dist = tof.readRangeContinuousMillimeters();
 
   return tof_dist <= dist;
 
+
+}
+
+bool checkExit(int sensor, int dist, int room_orientation) {
+
+  bool initial_wall;
+
+  initial_wall == checkWall(sensor, dist);
+
+  if (room_orientation == 1)
+    left(90, 150);
+  else
+    right(90, 150);
+
+  return !checkWall(sensor, dist) || !initial_wall;
 
 }
 
@@ -768,13 +911,13 @@ int triangleDETECT() {
   Serial.print(tofleft);
   Serial.print("\t");
   Serial.println(tofright);
-  
+
   keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
 
   Serial.println(keydifference);
   if (keydifference >= 40) {
 
-    Serial.println("triangle1"); 
+    Serial.println("triangle1");
     return (1);
 
   }
@@ -784,15 +927,34 @@ int triangleDETECT() {
     return (2);
 
   }
-  else{
+  else {
     Serial.println("flat wall");
     return (0);
   }
 #endif
 #ifdef FAKE_ROBOT
-return 0;
+  return 1;
 #endif
 }
+
+#ifdef FAKE_ROBOT
+
+volatile int times = 0;
+const int maximum = 4;
+
+
+int triangleDETECT2() {
+  return 2;
+}
+
+int triangleDETECT3() {
+ 
+  times++;
+  Serial.println(times);
+  return random(0,3);
+  //return (times/2) >= maximum;
+}
+#endif
 
 // put your main code here, to run repeatedly:
 //  if(tof.readRangeContinuousMillimeters() < 200){
@@ -866,52 +1028,52 @@ return 0;
   }
   }
 */
-/* 
-void loop() {
-  Raise(0); //half way raise 
-    if(triangleDETECT() != 0){ 
-        left(90, 150); 
-        if(checkWall(5, 100)){ 
-           right(90, 150);  
-           right(45, 150); 
-           driveDist(500, 100);  
+/*
+  void loop() {
+  Raise(0); //half way raise
+    if(triangleDETECT() != 0){
+        left(90, 150);
+        if(checkWall(5, 100)){
+           right(90, 150);
            right(45, 150);
-           Raise(600); 
-         
-        } 
-        else { 
-           right(90, 150); 
-           left(45, 150); 
-           driveDist(500, 100);  
+           driveDist(500, 100);
+           right(45, 150);
+           Raise(600);
+
+        }
+        else {
+           right(90, 150);
            left(45, 150);
-           Raise(600); 
-        
-        } 
-        
+           driveDist(500, 100);
+           left(45, 150);
+           Raise(600);
+
+        }
+
     }
     else {
-       left(90, 150); 
+       left(90, 150);
        if(triangleDETECT() == 1) {
-           right(180, 150); 
+           right(180, 150);
            while(!checkWall(5, 100))
-           utils::forward(100); 
-           left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it  
-           Raise(600); 
-          
-        } 
+           utils::forward(100);
+           left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it
+           Raise(600);
+
+        }
        else {
-       right(180, 150); 
+       right(180, 150);
         while(!checkWall(6, 100))
-        utils::forward(100);  
-        right(180, 150);  
-        Raise(600); 
-      
+        utils::forward(100);
+        right(180, 150);
+        Raise(600);
+
        }
     }
-   //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit 
+   //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit
 
     float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
-    
+
     while(orientationData.orientation.x < future){
       while (!checkWall(5,1200)){
         motor1.run(150);
@@ -924,7 +1086,7 @@ void loop() {
 
       } while(silver_linedetect() > 6 && !front_green());
 
-      if (front_green()){
+      if (front_green()){fi
         break;
       }
 
@@ -932,11 +1094,11 @@ void loop() {
         utils::forward(-100);
       }
 
-    
+
     }
   while (true);
 
 
-}
-*/ 
-// test section for exit and dropping balls. 
+  }
+*/
+// test section for exit and dropping balls.
