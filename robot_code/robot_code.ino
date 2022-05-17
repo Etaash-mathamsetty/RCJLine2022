@@ -236,7 +236,6 @@ void left90(bool skip = false, int additional = 0)
   {
     utils::forward(100);
   }
-  qtr.Update();
   utils::stopMotors();
   delay(100);
   utils::resetTicks();
@@ -284,7 +283,7 @@ int line_trace()
   int32_t line = qtr.get_line();
   line -= 3500;
   // hack to improve line tracing (not anymore)
-  const float boost = kp_orig;
+ /* const float boost = 0.1f;
   if (abs(line) > 2500)
   {
     kp = boost;
@@ -292,7 +291,7 @@ int line_trace()
   else
   {
     kp = kp_orig;
-  }
+  }*/
   int error = (kp * line);
 #ifndef LINEOFF
   motor1.run(-base_speed + error + ((error - prev_error) * kd));
@@ -616,7 +615,7 @@ void loop()
 
       motor2.run(100 - org_dist * Kp_obs);
       motor1.run(-100 - org_dist * Kp_obs);
-      delay(2000);
+      delay(2500);
       
       qtr.Update();
       while(majority_linedetect() < 3){
@@ -626,9 +625,8 @@ void loop()
       }
       utils::stopMotors();
       delay(100);
-      utils::forward(100);
-      delay(300);
-      right(60,100);
+      utils::forwardTicks(100,115);
+      right(50,100);
       turn_right_to_black();
     }
     else{
@@ -636,7 +634,7 @@ void loop()
 
       motor2.run(100 + org_dist * Kp_obs);
       motor1.run(-100 + org_dist * Kp_obs);
-      delay(2000);
+      delay(2500);
 
       qtr.Update();
       while(majority_linedetect() < 3){
@@ -646,9 +644,8 @@ void loop()
       }
       utils::stopMotors();
       delay(100);
-      utils::forward(100);
-      delay(300);
-      left(60,100);
+      utils::forwardTicks(100,115);
+      left(50,100);
       turn_left_to_black();
     }
   }
