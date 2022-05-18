@@ -63,6 +63,7 @@ namespace logger{
 		
 	}
 	
+	#if __cplusplus >= 201703L
 	//template <typename T>
 	void println(auto thing){
 		#ifndef LOGGER_DISABLE
@@ -76,6 +77,7 @@ namespace logger{
 		Serial.print(thing);	
 		#endif
 	}
+	#endif
 };
 
 };

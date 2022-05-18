@@ -9,7 +9,12 @@
 //#define MOTORSOFF
 #include "Motors.h"
 #include "utils.h"
-#define log utils::logger
+
+#define log_begin utils::logger::begin
+#if !(__cplusplus >= 201703L)
+#define log_print(x) Serial.print(x)
+#define log_println(x) Serial.println(x)
+#endif
 //#define LINEOFF
 const int white_val = 227;
 
@@ -132,14 +137,14 @@ void check_lr_intersection(bool *left, bool *right)
 
 void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
 {
-  log::println("raw color:");
-  log::print(r);
-  log::print('\t');
-  log::print(g);
-  log::print('\t');
-  log::print(b);
-  log::print('\t');
-  log::println(c);
+  log_println("raw color:");
+  log_print(r);
+  log_print('\t');
+  log_print(g);
+  log_print('\t');
+  log_print(b);
+  log_print('\t');
+  log_println(c);
 }
 
 void turn_left_to_black()
@@ -211,7 +216,7 @@ void right90(bool, int additional);
 
 void left90(bool skip = false, int additional = 0)
 {
-  log::println("left90");
+  log_println("left90");
   
   motor2.resetTicks();
   const int ticks_forward = 200;
@@ -250,7 +255,7 @@ void left90(bool skip = false, int additional = 0)
 
 void right90(bool skip = false, int additional = 0)
 {
-  log::println("right90");
+  log_println("right90");
   motor2.resetTicks();
   const int ticks_forward = 200;
   while (motor2.getTicks() <= ticks_forward && linedetect() && !skip)
@@ -453,7 +458,7 @@ void green90l()
   {
     utils::forward(80);
     qtr.Update();
-    log::println(majority_linedetect());
+    log_println(majority_linedetect());
     double_green = green_detect();
     if (double_green == 0xFF)
     {
@@ -499,7 +504,7 @@ void green90r()
   {
     utils::forward(80);
     qtr.Update();
-    log::println(majority_linedetect());
+    log_println(majority_linedetect());
     double_green = green_detect();
     if (double_green == 0xFF)
     {
@@ -546,7 +551,7 @@ void setup()
 {
   // put your setup code here, to run once:
   Wire.begin();
-  log::begin();
+  log_begin();
   delay(1000);
   const int boost = 10;
   motor1.addBoost(boost);
@@ -600,20 +605,20 @@ void loop()
 
   for (int i = 0; i < SensorCount; i++)
   {
-    log::print(qtr[i]);
-    log::print('\t');
+    log_print(qtr[i]);
+    log_print('\t');
   }
-  log::println();
+  log_println();
   //tcaselect(1);
   distance = getDistCm() + 14;
   float org_dist = distance;
-  log::println(distance);
+  log_println(distance);
   if(distance < 25){
     left(90,120);
     delay(500);
-    log::print("dist after turn: ");
+    log_print("dist after turn: ");
     distance = getDistCm() + 14;
-    log::println(distance);
+    log_println(distance);
     if(distance < 30){
       left(180,100);
       delay(500);
