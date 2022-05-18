@@ -474,9 +474,10 @@ void print_color(float r, float g, float b) {
   Serial.println(b);
 }
 
-void driveDist(int encoders, int speed)
+void driveDist(int encoders, int speed, int reset = true)
 {
-  utils::resetTicks();
+  if (reset)
+    utils::resetTicks();
 
   while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
     utils::forward(speed);
@@ -540,6 +541,8 @@ void loop() {
       right(90, 150);
     }*/
 
+
+
   qtr.Update();
   // 1500 is required to let down the intake completely
   /*
@@ -547,6 +550,7 @@ void loop() {
   Raise(1350);
   delay(1000);
   while(true);*/
+
 
   /*
     if(silver_linedetect() >= 6){
@@ -560,7 +564,7 @@ void loop() {
   Serial.println(pos);
   Serial.print("room_orientation:\t");
   Serial.println(room_orientation);
-  Lower(500); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
+  Lower(1150); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
 
 
   if (room_orientation == 1) {
@@ -615,7 +619,7 @@ void loop() {
         right(90, 150);
         driveDist(250, 100);
         right(90, 150);
-        Raise(600);
+        Raise(550);
 
 #ifndef FAKE_ROBOT
         leave = triangleDETECT();
@@ -626,7 +630,7 @@ void loop() {
 #endif
 
 
-        Lower(1500);
+        Lower(550);
 
 
       }
@@ -635,7 +639,7 @@ void loop() {
         left(90, 150);
         driveDist(250, 100);
         left(90, 150);
-        Raise(600);
+        Raise(550);
 
 #ifndef FAKE_ROBOT
         leave = triangleDETECT();
@@ -645,14 +649,14 @@ void loop() {
         leave = triangleDETECT3();
 #endif
 
-        Lower(1500);
+        Lower(550);
 
       }
       count++;
     }
 
     delay(1000);
-    Raise(600);
+    Raise(550);
 #ifndef FAKE_ROBOT
 
     while (!checkWall(5, 150) && !checkWall(6, 150))
@@ -669,7 +673,7 @@ void loop() {
     else
       right(135, 150);
 
-    Raise(0);
+    Raise(800);
 
     right(45, 150);
 
@@ -746,7 +750,7 @@ void loop() {
         right(90, 150);
         driveDist(250, 100);
         right(90, 150);
-        Raise(600);
+        Raise(550);
 
 #ifndef FAKE_ROBOT
         leave = triangleDETECT();
@@ -757,14 +761,14 @@ void loop() {
 #endif
 
 
-        Lower(1500);
+        Lower(550);
       }
       else {
         driveDist(100, 100);  //needs to ram the ball in
         left(90, 150);
         driveDist(250, 100);
         left(90, 150);
-        Raise(600);
+        Raise(550);
 
 #ifndef FAKE_ROBOT
         leave = triangleDETECT();
@@ -774,13 +778,13 @@ void loop() {
         leave = triangleDETECT3();
 #endif
 
-        Lower(1500);
+        Lower(550);
       }
       count++;
     }
 
     delay(1000);
-    Raise(600);
+    Raise(550);
 #ifndef FAKE_ROBOT
 
     while (!checkWall(5, 150) && !checkWall(6, 150))
@@ -797,7 +801,7 @@ void loop() {
     else
       right(135, 150);
 
-    Raise(0);
+    Raise(800);
 
     right(45, 150);
 
@@ -823,7 +827,7 @@ void loop() {
   }
   //basically
   /*
-    Raise(0); //half way raise
+    Raise(1350); //half way raise
     if (triangleDETECT() != 0) {
     left(90, 150);
     if (checkWall(5, 30)) {
@@ -831,7 +835,7 @@ void loop() {
       right(45, 150);
       driveDist(250, 100);
       right(45, 150);
-      Raise(0);
+      Raise(1350);
 
     }
     else {
@@ -839,7 +843,7 @@ void loop() {
       left(45, 150);
       driveDist(250, 100);
       left(45, 150);
-      Raise(0);
+      Raise(1350);
 
     }
 
@@ -851,7 +855,7 @@ void loop() {
       while (!checkWall(5, 100))
         utils::forward(100);
       left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it
-      Raise(0);
+      Raise(1350);
 
     }
     else {
@@ -859,7 +863,7 @@ void loop() {
       while (!checkWall(6, 100))
         utils::forward(100);
       right(180, 150);
-      Raise(0);
+      Raise(1350);
 
     }
     }
@@ -943,9 +947,29 @@ bool forward_green() {
 void findPosition(int* triangle_pos, int* room_orient) {
   int triangle_orient;
 
-  driveDist(400, 100);
+  
+  utils::resetTicks();
+  while(!checkWall(5, 120))
+    utils::forward(100);
+ 
+
+  //driveDist(400, 100);
+  utils::stopMotors();
+  delay(1000);
+  
+  #ifndef FAKE_ROBOT
   *room_orient = triangleDETECT();
-  driveDist(400, -100);
+  #endif
+  #ifdef FAKE_ROBOT
+  *room_orient = triangleDETECT2();
+  #endif
+
+  //driveDist(400, -100);
+
+  
+  while(motor1.getTicks() < -250)
+    utils::forward(-100);
+ 
 
   if (*room_orient) {
     *triangle_pos = 1;
@@ -955,12 +979,20 @@ void findPosition(int* triangle_pos, int* room_orient) {
   *room_orient = 2;
   left(90, 150);
 
-  if (checkWall(5, 100)) {
+  if (checkWall(5, 200)) {
     right(180, 150);
     *room_orient = 1;
   }
 
-  driveDist(400, 100);
+  utils::resetTicks();
+  while(!checkWall(5, 120))
+    utils::forward(100);
+
+    //driveDist(400, 100);
+  utils::stopMotors();
+
+    delay(1000);
+    
 #ifndef FAKE_ROBOT
   triangle_orient = triangleDETECT();
 #endif
@@ -968,7 +1000,12 @@ void findPosition(int* triangle_pos, int* room_orient) {
   triangle_orient = triangleDETECT2();
 #endif
 
-  driveDist(400, -100);
+  //driveDist(400, -100);
+
+
+  while(motor1.getTicks() > 0)
+    utils::forward(-100);
+
 
   if (triangle_orient) {
     *triangle_pos = 2;
@@ -1047,13 +1084,13 @@ int triangleDETECT() {
   keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
 
   Serial.println(keydifference);
-  if (keydifference >= 25) {
+  if (keydifference >= 50) {
 
     Serial.println("triangle2");
     return (2);
 
   }
-  else if (keydifference <= -25) {
+  else if (keydifference <= -50) {
 
     Serial.println("triangle1");
     return (1);
@@ -1162,7 +1199,7 @@ int triangleDETECT3() {
 */
 /*
   void loop() {
-  Raise(0); //half way raise
+  Raise(1350); //half way raise
     if(triangleDETECT() != 0){
         left(90, 150);
         if(checkWall(5, 100)){
@@ -1170,7 +1207,7 @@ int triangleDETECT3() {
            right(45, 150);
            driveDist(500, 100);
            right(45, 150);
-           Raise(600);
+           Raise(1350);
 
         }
         else {
@@ -1178,7 +1215,7 @@ int triangleDETECT3() {
            left(45, 150);
            driveDist(500, 100);
            left(45, 150);
-           Raise(600);
+           Raise(1350);
 
         }
 
@@ -1190,7 +1227,7 @@ int triangleDETECT3() {
            while(!checkWall(5, 100))
            utils::forward(100);
            left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it
-           Raise(600);
+           Raise(1350);
 
         }
        else {
@@ -1198,7 +1235,7 @@ int triangleDETECT3() {
         while(!checkWall(6, 100))
         utils::forward(100);
         right(180, 150);
-        Raise(600);
+        Raise(1350);
 
        }
     }
