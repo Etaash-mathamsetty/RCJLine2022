@@ -1,15 +1,15 @@
 $fn = 30;
 
-w2 = 25;
+w2 = 29;
 w1 = 128;
 
-qtr_width = 60;
-color_width = 20;
+qtr_width = 62;
+color_width = 22;
 bosch_width = 25;
-bosch_length = 18;
+bosch_length = 20;
 I2C_width = 27;
-I2C_length = 41;
-MUX_side = 33;
+I2C_length = 38;
+MUX_side = 32;
 
 module roundedcube(size = [1, 1, 1], center = false, radius = 0.5, apply_to = "all") {
     // If single value, convert to [x, y, z] vector
@@ -76,18 +76,18 @@ module Hangar_Tof(x,y,z){
     translate([x,y,z])difference(){
     
     //roundedcube([w2, 2, 23], false, 2, "y");
-    cube([w2,2,23]);
+    cube([w2,3,23]);
     
-    translate([3,3,20])rotate(90,[1,0,0])
-        cylinder(4,2,2);
+    translate([5.5,4,20])rotate(90,[1,0,0])
+        cylinder(5,2,2);
     
-    translate([22,3,20])rotate(90,[1,0,0])
-        cylinder(4,2,2);
+    translate([w2-5.5,4,20])rotate(90,[1,0,0])
+        cylinder(5,2,2);
     
     for(i = [2:(13-2)/2:13]){
-        for(n = [3:(w2-6)/2:w2-3]){
-           translate([n,3,i]) rotate(90,[1,0,0])
-                cylinder(4,1.5,1.5);
+        for(n = [4:(w2-8)/2:w2-4]){
+           translate([n,4,i]) rotate(90,[1,0,0])
+                cylinder(5,1.5,1.5);
         }
     }
     
@@ -99,22 +99,22 @@ module Hangar_Tof(x,y,z){
 
 module Qtr(x,y,z)
      translate([x,y,z]){
-         translate([0,0,-1])cube([qtr_width,20,3]);
+         translate([0,0,-1])cube([qtr_width,22,3]);
          
-         translate([17,17,-1])cube([28,2,6]);
-         translate([22,15,-1])cube([21,2,6]);
+         translate([18,18,-1])cube([28,2,6]);
+         translate([23,16,-1])cube([21,2,6]);
          
-         for(i = [2:qtr_width - 4:qtr_width - 2]){
-         translate([i,2,-1]) cylinder(6,1.5,1.5);
+         for(i = [3:qtr_width - 6:qtr_width - 3]){
+         translate([i,3,-1]) cylinder(6,1.5,1.5);
          }
      }
      
 module Color(x,y,z){
     translate([x,y,z]){
     translate([0,0,-1])cube([color_width, color_width, 3]);
-    translate([1,18,-1])cube([18,2,6]);
-        for(i = [2:color_width-4:color_width - 2]){
-            translate([i,2,0]) cylinder(6,1.5,1.5);
+    translate([2,18,-1])cube([18,2,6]);
+        for(i = [3:color_width-6:color_width - 3]){
+            translate([i,3,0]) cylinder(6,1.5,1.5);
         }   
     }
 }
@@ -136,21 +136,22 @@ module Bosch(x,y,z){
 module I2C(x,y,z){
      translate([x,y,z-1]){         
          cube([I2C_width,I2C_length,3]);
-         for(n = [3:I2C_width - 6:I2C_width - 3])
-             for(i = [3:I2C_length - 11:I2C_length-5])
+         for(n = [3.5:I2C_width - 7:I2C_width - 3.5])
+             for(i = [3.5:I2C_length - 7:I2C_length-3.5])
                 translate([n,i,0]) cylinder(6,1.5,1.5);
-         translate([I2C_width/2-13/2,6,0])cube([13,35,6]);
+         translate([I2C_width/2-13/2,4,0])cube([13,35,6]);
          
      }
     
 }
 module MUX(x,y,z){
     translate([x,y,z-1]){
-        cube([MUX_side+1, MUX_side+2,3]);
+        cube([MUX_side, MUX_side+1,3]);
         translate([MUX_side/2 - 11,22,0]) cube([22,11,6]);
+        translate([MUX_side/2 - MUX_side/2,9,0]) cube([MUX_side,13,6]);
         translate([MUX_side/2 - 6.5,-2,0]) cube([13,11,6]);
-        for(a = [3:MUX_side-6:MUX_side-3]){
-            translate([a,3,0]) cylinder(6,1.5,1.5);
+        for(a = [3.5:MUX_side-7:MUX_side-3.5]){
+            translate([a,3.5,0]) cylinder(6,1.5,1.5);
         }
         
     }
@@ -169,22 +170,22 @@ translate([0,0,-1]){
 difference(){
     
     
-    roundedcube([w1, 72, 4], false, 2, "z");
+    roundedcube([w1, 75, 4], false, 2, "z");
     //cube([96,72,4]);
     //for(a = [24:w1-48:w1-24])
         
     for(a = [8:16:w1-8]){
-        if(a != 3*16+8 && a != 4*16+8){
+        if(a != 56 && a != 72){
             translate([a,68,-1]) cylinder(6,2,2);
         }
     }
     Qtr(w1/2- qtr_width/2,30,0);
 
-    for(i = [w1/2 - color_width-10:color_width*2:w1/2 + color_width -10])
+    for(i = [w1/2 - color_width-10:42:w1/2 + color_width -10])
         Color(i,5,0);
     Bosch(w1/2 - bosch_width/2,52,0);
-    I2C(w1/2-60,5,0); 
-    MUX(w1/2+64-MUX_side,5,0);
+    I2C(w1/2-60,25,0); 
+    MUX(w1/2+64-MUX_side,30,0);
     
 }
 
