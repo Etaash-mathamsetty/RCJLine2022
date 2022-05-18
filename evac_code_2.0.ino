@@ -615,7 +615,7 @@ void loop() {
 
       if (count % 2) {
 
-        driveDist(100, 100);
+        driveDist(120, 100);
         right(90, 150);
         driveDist(250, 100);
         right(90, 150);
@@ -635,7 +635,7 @@ void loop() {
 
       }
       else {
-        driveDist(100, 100);
+        driveDist(120, 100);
         left(90, 150);
         driveDist(250, 100);
         left(90, 150);
@@ -672,6 +672,8 @@ void loop() {
       left(135, 150);
     else
       right(135, 150);
+
+    driveDist(150, -100);
 
     Raise(800);
 
@@ -746,7 +748,7 @@ void loop() {
 
 
       if (!(count % 2)) {
-        driveDist(100, 100);
+        driveDist(120, 100);
         right(90, 150);
         driveDist(250, 100);
         right(90, 150);
@@ -764,7 +766,7 @@ void loop() {
         Lower(550);
       }
       else {
-        driveDist(100, 100);  //needs to ram the ball in
+        driveDist(120, 100);  //needs to ram the ball in
         left(90, 150);
         driveDist(250, 100);
         left(90, 150);
@@ -800,6 +802,8 @@ void loop() {
       left(135, 150);
     else
       right(135, 150);
+
+    driveDist(150, -100);
 
     Raise(800);
 
