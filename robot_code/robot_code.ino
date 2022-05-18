@@ -11,9 +11,12 @@
 #include "utils.h"
 
 #define log_begin utils::logger::begin
-#if !(__cplusplus >= 201703L)
-#define log_print(x) Serial.print(x)
-#define log_println(x) Serial.println(x)
+#if (__cplusplus >= 201703L)
+#define log_println utils::logger::println
+#define log_print utils::logger::print
+#else
+#define log_print Serial.print
+#define log_println Serial.println
 #endif
 //#define LINEOFF
 const int white_val = 227;
