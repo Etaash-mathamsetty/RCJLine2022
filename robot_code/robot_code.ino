@@ -252,8 +252,7 @@ void left90(bool skip = false, int additional = 0)
   utils::resetTicks();
   utils::forwardTicks(100, 50);
   turn_left_to_black();
-  //utils::forwardTicks(-100,30);
-  
+  utils::forwardTicks(-100,50); 
 }
 
 void right90(bool skip = false, int additional = 0)
@@ -288,7 +287,7 @@ void right90(bool skip = false, int additional = 0)
   utils::resetTicks();
   utils::forwardTicks(100,50);
   turn_right_to_black();
- // utils::forwardTicks(-100, 30);
+  utils::forwardTicks(-100, 50);
 }
 
 int line_trace()
@@ -493,8 +492,7 @@ void green90l()
   delay(60);
   left(60, 100);
   turn_left_to_black();
-  utils::forward(90);
-  delay(60);
+  utils::forwardTicks(-100,50);
 }
 
 void green90r()
@@ -539,8 +537,7 @@ void green90r()
   delay(60);
   right(60, 100);
   turn_right_to_black();
-  utils::forward(90);
-  delay(60);
+  utils::forwardTicks(-100,50);
 }
 
 void green180()
@@ -639,7 +636,7 @@ void loop()
       }
       utils::stopMotors();
       delay(100);
-      utils::forwardTicks(100,115);
+      utils::forwardTicks(100,125);
       right(50,100);
       turn_right_to_black();
     }
@@ -658,7 +655,7 @@ void loop()
       }
       utils::stopMotors();
       delay(100);
-      utils::forwardTicks(100,115);
+      utils::forwardTicks(100,125);
       left(50,100);
       turn_left_to_black();
     }
