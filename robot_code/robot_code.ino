@@ -20,7 +20,7 @@
 #endif
 //#define LINEOFF
 const int white_val = 227;
-
+bool evac_zone = false;
 #define LCD_ADDR 0x27
 const int8_t SensorCount = 8;
 QTRSensors qtr((const uint8_t[]){
@@ -73,7 +73,7 @@ float getDistCm(){
 
 bool linedetect()
 {
-  const float thresh = 600;
+  const float thresh = 700;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -88,7 +88,7 @@ bool linedetect()
 
 int majority_linedetect()
 {
-  const float thresh = 420;
+  const float thresh = 700;
   int line = 0;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -101,7 +101,7 @@ int majority_linedetect()
 }
 
 bool center_linedetect(){
-  const float tresh = 600;
+  const float tresh = 700;
   for(int i = 3; i <= 4; i++){
     if(qtr[i] > tresh){
       return true;
@@ -109,6 +109,9 @@ bool center_linedetect(){
   }
 }
 
+#ifdef MOTORSOFF
+#define DISABLE_INT_CHECK
+#endif
 //#define DISABLE_INT_CHECK
 
 void check_lr_intersection(bool *left, bool *right)
@@ -140,7 +143,8 @@ void check_lr_intersection(bool *left, bool *right)
 
 void print_raw_color(uint16_t r, uint16_t g, uint16_t b, uint16_t c)
 {
-  log_println("raw color:");
+  log_print("raw color:");
+  log_print('\t');
   log_print(r);
   log_print('\t');
   log_print(g);
@@ -262,8 +266,7 @@ void right90(bool skip = false, int additional = 0)
   const int ticks_forward = 200;
   while (motor2.getTicks() <= ticks_forward && linedetect() && !skip)
   {
-    motor1.run(-100);
-    motor2.run(100);
+    utils::forward(100);
     qtr.Update();
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
@@ -586,16 +589,16 @@ void setup()
 
 void print_color(float r, float g, float b)
 {
-  Serial.print(r);
-  Serial.print('\t');
-  Serial.print(g);
-  Serial.print('\t');
-  Serial.println(b);
+  log_print(r);
+  log_print('\t');
+  log_print(g);
+  log_print('\t');
+  log_println(b);
 }
 
 void loop()
 {
-
+if(!evac_zone){
   float distance;
   const float Kp_obs = 3.5; // nice naming
   bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
@@ -610,9 +613,13 @@ void loop()
   }
   log_println();
   //tcaselect(1);
+  #ifndef MOTORSOFF
   distance = getDistCm() + 14;
-  float org_dist = distance;
   log_println(distance);
+  #else
+  distance = 50;
+  #endif
+  float org_dist = distance;
   if(distance < 25){
     left(90,120);
     delay(500);
@@ -671,6 +678,7 @@ void loop()
   {
     gleft = true;
   }
+  
   print_color(r, g, b);
   tcaselect(3);
   //tcs.setInterrupt(false);
@@ -696,5 +704,22 @@ void loop()
   {
     green90r();
   }
+
+uint16_t r1,g1,b1,r2,g2,b2, c = 0, c1 = 0;
+tcaselect(2);
+tcs.getRawData(&r1, &g1, &b1, &c);
+print_raw_color(r1,g1,b1,c);
+
+tcaselect(3);
+tcs.getRawData(&r2, &g2, &b2, &c1);
+print_raw_color(r2,g2,b2,c1);
+
+//if(r1 <= 100 && b1 <= 100 && g1 <= 100 && c >= 250 && r2 <= 93 && g2 <= 93 && b2 <= 93 && c1 >= 250){
+//  log_println("silver");
+//  evac_zone = true;
+//  utils::stopMotors();
+//  return;
+//}
+}
  // color_detect_black();
 }
