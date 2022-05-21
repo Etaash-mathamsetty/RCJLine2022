@@ -305,6 +305,9 @@ void lcd_display_qtr() {
 
 void right(int angle, int speed) {
 
+  speed -= 30;
+  angle -= 1;
+
 #ifdef FAKE_ROBOT
   tcaselect(1);
 #endif
@@ -363,6 +366,10 @@ void right(int angle, int speed) {
 }
 
 void left(int angle, int speed) {
+
+  speed -= 30;
+  angle -= 1;
+
 #ifdef FAKE_ROBOT
   tcaselect(1);
 #endif
@@ -550,7 +557,7 @@ void loop() {
 
   qtr.Update();
 
- 
+
   // 1500 is required to let down the intake completely
   /*
     Lower(1350);
@@ -571,7 +578,7 @@ void loop() {
   Serial.println(pos);
   Serial.print("room_orientation:\t");
   Serial.println(room_orientation);
-  Lower(1400); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
+  Lower(1750); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
 
 
   if (room_orientation == 1) {
@@ -582,6 +589,10 @@ void loop() {
 
     while (!checkWall(0, 150) || front_green())
       utils::forward(100);
+
+    driveDist(300, 100);
+    delay(1000);
+    driveDist(300, -100);
 
     if (checkExit(0, 150, room_orientation)) {
       if (pos == 1)
@@ -606,6 +617,8 @@ void loop() {
       while (!checkWall(0, 250)) {
         utils::forward(100);
       }
+      utils::stopMotors();
+      delay(1000);
       /*
         new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
@@ -637,7 +650,9 @@ void loop() {
 
         if (!leave) {
 
-          driveDist(100, 100);
+          driveDist(300, 100);
+          delay(1000);
+          driveDist(300, -100);
           right(90, 150);
           driveDist(250, 100);
           right(90, 150);
@@ -663,7 +678,9 @@ void loop() {
 
         if (!leave) {
 
-          driveDist(100, 100);
+          driveDist(300, 100);
+          delay(1000);
+          driveDist(300, -100);
           left(90, 150);
           driveDist(250, 100);
           left(90, 150);
@@ -727,6 +744,10 @@ void loop() {
     while (!checkWall(0, 150) || front_green())
       utils::forward(100);
 
+    driveDist(300, 100);
+    delay(1000);
+    driveDist(300, -100);
+
     if (checkExit(0, 150, room_orientation)) {
       if (pos == 1)
         exit_tile == 2;
@@ -752,6 +773,8 @@ void loop() {
       while (!checkWall(0, 250)) {
         utils::forward(100);
       }
+      utils::stopMotors();
+      delay(1000);
 
       /*new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
@@ -782,7 +805,9 @@ void loop() {
         Lower(550);
 
         if (!leave) {
-          driveDist(100, 100);
+          driveDist(300, 100);
+          delay(1000);
+          driveDist(300, -100);
           right(90, 150);
           driveDist(250, 100);
           right(90, 150);
@@ -805,7 +830,9 @@ void loop() {
 
         if (!leave) {
 
-          driveDist(100, 100);  //needs to ram the ball in
+          driveDist(300, 100);
+          delay(1000);
+          driveDist(300, -100);  //needs to ram the ball in
           left(90, 150);
           driveDist(250, 100);
           left(90, 150);
@@ -835,7 +862,7 @@ void loop() {
     else
       right(135, 150);
 
-    Raise(800);
+    Raise(1200);
 
     right(45, 150);
 
@@ -1122,13 +1149,13 @@ int triangleDETECT() {
   keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
 
   Serial.println(keydifference);
-  if (keydifference >= 50) {
+  if (keydifference >= 40) {
 
     Serial.println("triangle2");
     return (2);
 
   }
-  else if (keydifference <= -50) {
+  else if (keydifference <= -40) {
 
     Serial.println("triangle1");
     return (1);
