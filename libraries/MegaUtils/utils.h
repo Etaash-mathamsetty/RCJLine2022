@@ -29,7 +29,8 @@ void resetTicks(){
 	motor2->resetTicks();
 }
 
-void forwardTicks(int speed, int ticks){
+void forwardTicks(int speed, int ticks, bool reset = true){
+  if(reset)
   resetTicks();
   if(speed > 0){
     while(motor2->getTicks() <= ticks){

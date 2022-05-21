@@ -481,7 +481,12 @@ void print_color(float r, float g, float b) {
   Serial.println(b);
 }
 
-#define driveDist(ticks, speed) utils::forwardTicks(speed, ticks)
+//#define driveDist(ticks, speed) utils::forwardTicks(speed, ticks)
+//#define driveDist(ticks, speed, reset) if(reset) {utils::resetTicks(); utils::forwardTicks(speed, ticks); } else { utils::forwardTicks(speed, ticks); }
+
+void driveDist(int ticks, int speed, bool reset = true) {
+  utils::forwardTicks(speed, ticks, reset);
+}
 
 void Raise(int target)
 {
