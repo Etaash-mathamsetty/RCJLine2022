@@ -550,9 +550,7 @@ void loop() {
 
   qtr.Update();
 
-  while (true) {
-    triangleDETECT();
-  }
+ 
   // 1500 is required to let down the intake completely
   /*
     Lower(1350);
