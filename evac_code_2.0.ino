@@ -481,23 +481,7 @@ void print_color(float r, float g, float b) {
   Serial.println(b);
 }
 
-
-
-void driveDist(int encoders, int speed, int reset = true)
-{
-  if (reset)
-    utils::resetTicks();
-
-  while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
-    utils::forward(speed);
-  }
-
-  utils::stopMotors();
-  return;
-}
-
-
-//#define driveDist(ticks, speed) utils::forwardTicks(speed, ticks)
+#define driveDist(ticks, speed) utils::forwardTicks(speed, ticks)
 
 void Raise(int target)
 {
