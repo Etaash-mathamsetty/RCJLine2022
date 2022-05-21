@@ -73,7 +73,7 @@ float getDistCm(){
 
 bool linedetect()
 {
-  const float thresh = 700;
+  const float thresh = 650;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -88,7 +88,7 @@ bool linedetect()
 
 int majority_linedetect()
 {
-  const float thresh = 700;
+  const float thresh = 650;
   int line = 0;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -101,7 +101,7 @@ int majority_linedetect()
 }
 
 bool center_linedetect(){
-  const float tresh = 700;
+  const float tresh = 650;
   for(int i = 3; i <= 4; i++){
     if(qtr[i] > tresh){
       return true;
