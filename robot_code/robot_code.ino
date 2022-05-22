@@ -112,7 +112,7 @@ bool center_linedetect() {
   }
 }
 
-void right(int angle, int speed, int subtract_ang = 2)
+void right(int angle, int speed, int subtract_ang = 0)
 {
   float orient = 0;
   angle -= subtract_ang;
@@ -147,7 +147,7 @@ void right(int angle, int speed, int subtract_ang = 2)
   utils::stopMotors();
 }
 
-void left(int angle, int speed, int subtract_ang = 2)
+void left(int angle, int speed, int subtract_ang = 0)
 {
   float orientation = 0;
   angle -= subtract_ang;
@@ -892,14 +892,21 @@ bool red_detect() {
   tcs.getRGB(&r1, &g1, &b1);
   print_color(r1, g1, b1);
 
-  return r1 >= 150 && g1 < 50 && b1 < 50;
+  return r1/g1 >= 2.9;
 
 }
 
 int silver_persistance = 0;
+bool stop = false;
+
 
 void loop()
 {
+/*
+if(stop){
+  utils::stopMotors();
+  return;
+}*/
 
 /*
   while (!checkWall(5, 200) && !front_green()) {
@@ -909,10 +916,12 @@ void loop()
   while (true)
     utils::stopMotors();
   delay(3000);
-*/
+*//*
   while (red_detect()) {
     utils::stopMotors();
-  }
+    Serial.println("red");
+    stop = true;
+  }*/
 
   if (!evac_zone) {
     uint16_t r1, g1, b1, r2, g2, b2, c1 = 0, c2 = 0;
@@ -1239,6 +1248,11 @@ void loop()
 
       Raise(1200);
 
+      while(true){
+        utils::stopMotors();
+        delay(1000);
+        }
+
       utils::stopMotors();
       delay(1000);
 
@@ -1397,6 +1411,11 @@ void loop()
         right(135, 150);
 
       Raise(1200);
+
+      while(true){
+        utils::stopMotors();
+        delay(1000);
+        }
 
       right(45, 150);
 
