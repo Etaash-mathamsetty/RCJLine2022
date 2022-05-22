@@ -112,7 +112,7 @@ bool center_linedetect() {
   }
 }
 
-void right(int angle, int speed, int subtract_ang = 0)
+void right(int angle, int speed, int subtract_ang = 2)
 {
   float orient = 0;
   angle -= subtract_ang;
@@ -147,7 +147,7 @@ void right(int angle, int speed, int subtract_ang = 0)
   utils::stopMotors();
 }
 
-void left(int angle, int speed, int subtract_ang = 0)
+void left(int angle, int speed, int subtract_ang = 2)
 {
   float orientation = 0;
   angle -= subtract_ang;
@@ -615,7 +615,7 @@ bool forward_green() {
 
   utils::resetTicks();
 
-  while (motor1.getTicks() < 200 || front_green())
+  while (motor1.getTicks() < 270 && !front_green())
     utils::forward(100);
 
   if (front_green())
@@ -636,7 +636,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
   utils::resetTicks();
 
 
-  while (!checkWall(5, 300) || front_green()) {
+  while (!checkWall(5, 300) && !front_green()) {
     Serial.print("Checkwall: ");
     Serial.println(!checkWall(5, 300));
     utils::forward(100);
@@ -664,8 +664,8 @@ void findPosition(int* triangle_pos, int* room_orient) {
   while (motor1.getTicks() < -200)
     utils::forward(-100);
 
-    utils::stopMotors();
-    delay(1000);
+  utils::stopMotors();
+  delay(1000);
 
 
   if (*room_orient) {
@@ -687,7 +687,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
   utils::resetTicks();
 
-  while (!checkWall(5, 300) || front_green())
+  while (!checkWall(5, 300)  && !front_green())
     utils::forward(100);
 
 
@@ -872,13 +872,13 @@ void setup()
 void print_color(float r, float g, float b)
 {
   /*
-  Serial.print(" R: ");
-  Serial.println(r);
-  Serial.print(" G: ");
-  Serial.println(g);
-  Serial.print(" B: ");
-  Serial.println(b);*/
-  
+    Serial.print(" R: ");
+    Serial.println(r);
+    Serial.print(" G: ");
+    Serial.println(g);
+    Serial.print(" B: ");
+    Serial.println(b);*/
+
   log_print(r);
   log_print('\t');
   log_print(g);
@@ -886,14 +886,14 @@ void print_color(float r, float g, float b)
   log_println(b);
 }
 
-bool red_detect(){
-    float r1, g1, b1;
-    tcaselect(3);
-    tcs.getRGB(&r1, &g1, &b1);
-    print_color(r1, g1, b1);
+bool red_detect() {
+  float r1, g1, b1;
+  tcaselect(3);
+  tcs.getRGB(&r1, &g1, &b1);
+  print_color(r1, g1, b1);
 
-    return r1 >= 150 && g1 < 50 && b1 < 50;
-  
+  return r1 >= 150 && g1 < 50 && b1 < 50;
+
 }
 
 int silver_persistance = 0;
@@ -901,10 +901,19 @@ int silver_persistance = 0;
 void loop()
 {
 
-  while(red_detect()){
+/*
+  while (!checkWall(5, 200) && !front_green()) {
+    Serial.println(front_green());
+    //utils::forward(100);
+  }
+  while (true)
     utils::stopMotors();
-    }
-  
+  delay(3000);
+*/
+  while (red_detect()) {
+    utils::stopMotors();
+  }
+
   if (!evac_zone) {
     uint16_t r1, g1, b1, r2, g2, b2, c1 = 0, c2 = 0;
     //print_raw_color(r1,g1,b1,c1);
@@ -1093,7 +1102,7 @@ void loop()
 
       left(90, 150);
 
-      while (!checkWall(0, 300) || front_green())
+      while (!checkWall(0, 300) && !front_green())
         utils::forward(100);
 
       driveDist(500, 100);
@@ -1236,8 +1245,11 @@ void loop()
       right(45, 150);
 
       for (int i = 0; i < 3; i++) {
-        while (!checkWall(5, 200) || front_green())
+        while (!checkWall(5, 200)  && !front_green())
           utils::forward(100);
+
+        if(front_green)
+          driveDist(100, -100);
 
         utils::stopMotors();
         delay(1000);
@@ -1263,7 +1275,7 @@ void loop()
 
       right(90, 150);
 
-      while (!checkWall(0, 300) || front_green())
+      while (!checkWall(0, 300) && !front_green())
         utils::forward(100);
 
       driveDist(500, 100);
@@ -1389,7 +1401,7 @@ void loop()
       right(45, 150);
 
       for (int i = 0; i < 3; i++) {
-        while (!checkWall(5, 200) || front_green())
+        while (!checkWall(5, 200) && !front_green())
           utils::forward(100);
 
         utils::stopMotors();
