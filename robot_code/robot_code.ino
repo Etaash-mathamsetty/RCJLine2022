@@ -661,8 +661,11 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
 
 
-  while (motor1.getTicks() < -100)
+  while (motor1.getTicks() < -200)
     utils::forward(-100);
+
+    utils::stopMotors();
+    delay(1000);
 
 
   if (*room_orient) {
@@ -699,7 +702,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
 #endif
 
 
-  while (motor1.getTicks() < -100)
+  while (motor1.getTicks() < -200)
     utils::forward(-100);
 
   utils::stopMotors();
@@ -788,13 +791,13 @@ int triangleDETECT() {
   keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
 
   Serial.println(keydifference);
-  if (keydifference >= 40) {
+  if (keydifference >= 35) {
 
     Serial.println("triangle2");
     return (2);
 
   }
-  else if (keydifference <= -40) {
+  else if (keydifference <= -35) {
 
     Serial.println("triangle1");
     return (1);
@@ -1045,19 +1048,17 @@ void loop()
     float comparison;
     bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
+    utils::stopMotors();
+    delay(1000);
 
-
-
-
-
-    qtr.Update();
+    driveDist(200, 100);
 
     Serial.println("Silver detected");
     findPosition(&pos, &room_orientation);
     Serial.println(pos);
     Serial.print("room_orientation:\t");
     Serial.println(room_orientation);
-    Lower(1750); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
+    Lower(1450); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
 
 
     if (room_orientation == 1) {
@@ -1066,10 +1067,10 @@ void loop()
 
       left(90, 150);
 
-      while (!checkWall(0, 150) || front_green())
+      while (!checkWall(0, 300) || front_green())
         utils::forward(100);
 
-      driveDist(300, 100);
+      driveDist(500, 100);
       delay(1000);
       driveDist(100, -100);
 
@@ -1236,10 +1237,10 @@ void loop()
 
       right(90, 150);
 
-      while (!checkWall(0, 150) || front_green())
+      while (!checkWall(0, 300) || front_green())
         utils::forward(100);
 
-      driveDist(300, 100);
+      driveDist(500, 100);
       delay(1000);
       driveDist(100, -100);
 
@@ -1383,74 +1384,7 @@ void loop()
 
 
     }
-    //basically
-    /*
-      Raise(1350); //half way raise
-      if (triangleDETECT() != 0) {
-      left(90, 150);
-      if (checkWall(5, 30)) {
-        right(90, 150);
-        right(45, 150);
-        driveDist(250, 100);
-        right(45, 150);
-        Raise(1350);
 
-      }
-      else {
-        right(90, 150);
-        left(45, 150);
-        driveDist(250, 100);
-        left(45, 150);
-        Raise(1350);
-
-      }
-
-      }
-      else {
-      left(90, 150);
-      if (triangleDETECT() == 1) {
-        right(180, 150);
-        while (!checkWall(5, 100))
-          utils::forward(100);
-        left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it
-        Raise(1350);
-
-      }
-      else {
-        right(180, 150);
-        while (!checkWall(6, 100))
-          utils::forward(100);
-        right(180, 150);
-        Raise(1350);
-
-      }
-      }
-      //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit
-
-      float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
-
-      while (orientationData.orientation.x < future) {
-      while (!checkWall(5, 1200)) {
-        motor1.run(150);
-        motor2.run(150);
-      }
-
-      do {
-        utils::resetTicks();
-        utils::forward(100);
-
-      } while (silver_linedetect() > 6 && front_green());
-
-      if (front_green()) {
-        break;
-      }
-
-      while (motor1.getTicks() > 0) {
-        utils::forward(-100);
-      }
-
-
-      }*/
 
     utils::stopMotors();
     delay(1000);
