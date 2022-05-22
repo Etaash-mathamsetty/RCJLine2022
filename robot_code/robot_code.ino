@@ -7,6 +7,7 @@
 #include <VL53L0X.h>
 #include "Adafruit_TCS34725.h"
 //#define MOTORSOFF
+//#define FAKE_ROBOT
 #include "Motors.h"
 #include "utils.h"
 
@@ -33,9 +34,10 @@ VL53L0X tof;
 sensors_event_t orientationData;
 Motor motor1(MPORT2);
 Motor motor2(MPORT1);
+Motor motor3(MPORT3);
 const float kp_orig = 0.09f;
 float kp = kp_orig;
-const float kd = 0.01f;
+const float kd = 0.02f;
 const int base_speed = 80;
 const uint8_t pingPin = A15;
 
@@ -73,7 +75,7 @@ float getDistCm(){
 
 bool linedetect()
 {
-  const float thresh = 650;
+  const float thresh = 680;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -88,7 +90,7 @@ bool linedetect()
 
 int majority_linedetect()
 {
-  const float thresh = 650;
+  const float thresh = 680;
   int line = 0;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -101,12 +103,83 @@ int majority_linedetect()
 }
 
 bool center_linedetect(){
-  const float tresh = 650;
+  const float tresh = 680;
   for(int i = 3; i <= 4; i++){
     if(qtr[i] > tresh){
       return true;
     }
   }
+}
+
+void right(int angle, int speed, int subtract_ang = 0)
+{
+  float orient = 0;
+  angle -= subtract_ang;
+
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  int goal = (int)(orientationData.orientation.x + angle);
+  orient = orientationData.orientation.x > angle + (goal - 360) ? orientationData.orientation.x - 360 : orientationData.orientation.x;
+
+  if (goal >= 360)
+  {
+
+    goal -= 360;
+    while (orient < goal)
+    {
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      orient = orientationData.orientation.x > angle + goal ? orientationData.orientation.x - 360 : orientationData.orientation.x;
+      // Serial.println(orient);
+      motor2.run(speed);
+      motor1.run(speed);
+    }
+  }
+
+  else
+  {
+    while ((int)orientationData.orientation.x < goal)
+    {
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      motor2.run(speed);
+      motor1.run(speed);
+    }
+  }
+  utils::stopMotors();
+}
+
+void left(int angle, int speed, int subtract_ang = 0)
+{
+  float orientation = 0;
+  angle -= subtract_ang;
+
+  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+  int goal = (int)(orientationData.orientation.x - angle);
+  orientation = orientationData.orientation.x < goal + 360 - angle ? orientationData.orientation.x + 360 : orientationData.orientation.x;
+
+  if (goal < 0)
+  {
+
+    goal += 360;
+
+    while (orientation > goal)
+    {
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      orientation = orientationData.orientation.x < goal - angle ? orientationData.orientation.x + 360 : orientationData.orientation.x;
+      motor2.run(-speed);
+      motor1.run(-speed);
+    }
+  }
+
+  else
+  {
+
+    while ((int)orientationData.orientation.x > goal)
+    {
+      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+      motor2.run(-speed);
+      motor1.run(-speed);
+    }
+  }
+  utils::stopMotors();
 }
 
 #ifdef MOTORSOFF
@@ -355,95 +428,27 @@ void lcd_display_qtr()
   // delay(150);
 }
 
-void right(int angle, int speed)
-{
-  float orient = 0;
-
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  int goal = (int)(orientationData.orientation.x + angle);
-  orient = orientationData.orientation.x > angle + (goal - 360) ? orientationData.orientation.x - 360 : orientationData.orientation.x;
-
-  if (goal >= 360)
-  {
-
-    goal -= 360;
-    while (orient < goal)
-    {
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      orient = orientationData.orientation.x > angle + goal ? orientationData.orientation.x - 360 : orientationData.orientation.x;
-      // Serial.println(orient);
-      motor2.run(speed);
-      motor1.run(speed);
-    }
-  }
-
-  else
-  {
-    while ((int)orientationData.orientation.x < goal)
-    {
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      motor2.run(speed);
-      motor1.run(speed);
-    }
-  }
-  utils::stopMotors();
-}
-
-void left(int angle, int speed)
-{
-  float orientation = 0;
-
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-  int goal = (int)(orientationData.orientation.x - angle);
-  orientation = orientationData.orientation.x < goal + 360 - angle ? orientationData.orientation.x + 360 : orientationData.orientation.x;
-
-  if (goal < 0)
-  {
-
-    goal += 360;
-
-    while (orientation > goal)
-    {
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      orientation = orientationData.orientation.x < goal - angle ? orientationData.orientation.x + 360 : orientationData.orientation.x;
-      motor2.run(-speed);
-      motor1.run(-speed);
-    }
-  }
-
-  else
-  {
-
-    while ((int)orientationData.orientation.x > goal)
-    {
-      bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
-      motor2.run(-speed);
-      motor1.run(-speed);
-    }
-  }
-  utils::stopMotors();
-}
-
 uint8_t green_detect()
 {
   tcaselect(2);
   float r, g, b;
-  tcs.setInterrupt(!true);
+  //tcs.setInterrupt(!true);
   tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(!false);
+  //tcs.setInterrupt(!false);
   bool gleft = false, gright = false;
-  if (g >= 100 && r < 100 && b < 100)
+  Serial.println(g/b * 10);
+  if ((g/b) * 10 >= 11)
   {
     gleft = true;
   }
-  print_color(r, g, b);
+  //print_color(r, g, b);
   tcaselect(3);
-  tcs.setInterrupt(false);
+  //tcs.setInterrupt(false);
   tcs.getRGB(&r, &g, &b);
-  tcs.setInterrupt(true);
-  print_color(r, g, b);
-
-  if (g >= 100 && r < 100 && b < 100)
+  //tcs.setInterrupt(true);
+  //print_color(r, g, b);
+  Serial.println(g/b * 10);
+  if ((g/b) * 10 >= 11)
   {
     gright = true;
   }
@@ -550,6 +555,62 @@ void green180()
   turn_left_to_black();
 }
 
+void driveDist(int encoders, int speed, int reset = true)
+{
+  if (reset)
+    utils::resetTicks();
+
+  while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
+    utils::forward(speed);
+  }
+
+  utils::stopMotors();
+  return;
+}
+
+void Raise(int target)
+{
+
+#ifndef FAKE_ROBOT
+  // motor3.resetTicks();
+  int start = motor3.getTicks();
+  while (abs(motor3.getTicks() - start) < target) {
+
+    motor3.run(-200);
+
+  }
+  motor3.stop();
+  return;
+#endif
+}
+
+void Lower(int target)
+{
+#ifndef FAKE_ROBOT
+  //motor3.resetTicks();
+  int start = motor3.getTicks();
+  while (abs(motor3.getTicks() - start) < target) {
+
+    motor3.run(200);
+
+  }
+  motor3.stop();
+  return;
+#endif
+}
+
+bool front_green() {
+
+
+#ifndef FAKE_ROBOT
+  return green_detect() > 0;
+#endif
+#ifdef FAKE_ROBOT
+  return false;
+#endif
+}
+
+
 
 
 void setup()
@@ -571,6 +632,20 @@ void setup()
   lcd.setCursor(3, 0);
   // lcd.print("Hello World!");
   bno.begin(Adafruit_BNO055::OPERATION_MODE_IMUPLUS);
+
+  tcaselect(0);
+  tof.setTimeout(500);
+  tof.init();
+  tof.startContinuous();
+  tcaselect(5);
+  tof.setTimeout(500);
+  tof.init();
+  tof.startContinuous();
+  tcaselect(6);
+  tof.setTimeout(500);
+  tof.init();
+  tof.startContinuous();
+  
   tcaselect(2);
   if (!tcs.begin())
   {
@@ -613,8 +688,8 @@ tcs.getRawData(&r2, &g2, &b2, &c2);
 //Serial.print("qtr[4]: ");
 //Serial.println(qtr[4]);
 //print_raw_color(r2,g2,b2,c2);
-//Serial.print("r/g:");
-//Serial.println((r2/(float)g2) * 10);
+Serial.print("r/g:");
+Serial.println((r2/(float)g2) * 10);
 //Serial.print(" c:");
 //Serial.print(c2);
 if(c2 >=  950 && (r2/(float)g2) * 10 >= 10.5){
@@ -704,12 +779,13 @@ if(silver_persistance >= 2){
   float r, g, b;
   //tcs.setInterrupt(false);
   tcs.getRGB(&r, &g, &b);
-  Serial.print("g/b:");
-  Serial.println((g/b) * 10);
+  //Serial.print("g/b:");
+  //Serial.println((g/b) * 10);
   //print_color(r, g, b);
   //tcs.setInterrupt(true);
   bool gleft = false, gright = false;
-  if ((g/b)*10 >= 11.7)
+  Serial.println(green_detect(), HEX);
+  if (green_detect() & 0x0F > 0)
   {
     #ifndef MOTORSOFF
     gleft = true;
@@ -724,9 +800,9 @@ if(silver_persistance >= 2){
   tcs.getRGB(&r, &g, &b);
   //tcs.setInterrupt(true);
   //print_color(r, g, b);
-  Serial.print("g2/b2:");
-  Serial.println((g/b) * 10);
-  if ((g/b) * 10 >= 11.7)
+  //Serial.print("g2/b2:");
+  //Serial.println((g/b) * 10);
+  if (green_detect() & 0xF0 > 0)
   {
     #ifndef MOTORSOFF
     gright = true;
@@ -756,6 +832,10 @@ if((r2 + g2 + b2) >= 1380 && (r1 + g1 + b1) >= 1380){
   utils::stopMotors();
   return;
 }*/
+}
+else{
+  
+  
 }
  // color_detect_black();
 }
