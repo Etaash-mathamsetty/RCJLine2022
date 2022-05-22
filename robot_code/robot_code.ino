@@ -24,9 +24,10 @@ const int white_val = 227;
 bool evac_zone = false;
 #define LCD_ADDR 0x27
 const int8_t SensorCount = 8;
-QTRSensors qtr((const uint8_t[]){
-                   A7, A8, A9, A10, A11, A12, A13, A14}, 
-               SensorCount, A6);
+QTRSensors qtr((const uint8_t[]) {
+  A7, A8, A9, A10, A11, A12, A13, A14
+},
+SensorCount, A6);
 LiquidCrystal_I2C lcd(LCD_ADDR, 20, 4);
 Adafruit_BNO055 bno = Adafruit_BNO055(55, 0x28);
 Adafruit_TCS34725 tcs = Adafruit_TCS34725(TCS34725_INTEGRATIONTIME_2_4MS, TCS34725_GAIN_16X);
@@ -60,22 +61,22 @@ void tcaselect(uint8_t i)
 
 int prev_error = 0;
 
-float getDistCm(){
-    pinMode(pingPin, OUTPUT);
-    digitalWrite(pingPin, LOW);
-    delayMicroseconds(2);
-    digitalWrite(pingPin, HIGH);
-    delayMicroseconds(5);
-    digitalWrite(pingPin, LOW);
+float getDistCm() {
+  pinMode(pingPin, OUTPUT);
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(pingPin, LOW);
 
-    pinMode(pingPin, INPUT);
-    return pulseIn(pingPin, HIGH)/26.0/2.0;
+  pinMode(pingPin, INPUT);
+  return pulseIn(pingPin, HIGH) / 26.0 / 2.0;
 }
 
 
 bool linedetect()
 {
-  const float thresh = 680;
+  const float thresh = 700;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -90,7 +91,7 @@ bool linedetect()
 
 int majority_linedetect()
 {
-  const float thresh = 680;
+  const float thresh = 700;
   int line = 0;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -102,10 +103,10 @@ int majority_linedetect()
   return line;
 }
 
-bool center_linedetect(){
-  const float tresh = 680;
-  for(int i = 3; i <= 4; i++){
-    if(qtr[i] > tresh){
+bool center_linedetect() {
+  const float tresh = 700;
+  for (int i = 3; i <= 4; i++) {
+    if (qtr[i] > tresh) {
       return true;
     }
   }
@@ -189,27 +190,27 @@ void left(int angle, int speed, int subtract_ang = 0)
 
 void check_lr_intersection(bool *left, bool *right)
 {
-  #ifdef DISABLE_INT_CHECK
+#ifdef DISABLE_INT_CHECK
   *left = false;
   *right = false;
   return;
-  #endif
+#endif
 
   const int tresh = 600;
   int triggers = 0;
-  for(int i = 0; i < SensorCount/2; i++){
-    if(qtr[i] >= tresh){
+  for (int i = 0; i < SensorCount / 2; i++) {
+    if (qtr[i] >= tresh) {
       triggers++;
     }
   }
-  if(triggers >= 3)
+  if (triggers >= 3)
     *left = true;
   triggers = 0;
-  for(int i = SensorCount/2; i < SensorCount; i++){
-    if(qtr[i] >= tresh)
+  for (int i = SensorCount / 2; i < SensorCount; i++) {
+    if (qtr[i] >= tresh)
       triggers++;
   }
-  if(triggers >= 3){
+  if (triggers >= 3) {
     *right = true;
   }
 }
@@ -231,27 +232,27 @@ void turn_left_to_black()
 {
   // motor2.resetTicks();
   /*while (!color_detect_black())
-  {
+    {
     motor1.run(-100);
     motor2.run(-100);
-  }
-  while(color_detect_black()){
+    }
+    while(color_detect_black()){
     motor1.run(-100);
     motor2.run(-100);
-  }
-  while(!color_detect_black()){
+    }
+    while(!color_detect_black()){
     motor1.run(90);
     motor2.run(90);
-  }*/
+    }*/
   //int32_t fast_abs(int32_t num)
   //return (num & (INT32_MAX >> 1));
   qtr.Update();
-  while(!(majority_linedetect() >= 2)){
+  while (!(majority_linedetect() >= 2)) {
     qtr.Update();
     motor1.run(-100);
     motor2.run(-100);
   }
-  while(abs(qtr.get_center()) >= 200){
+  while (abs(qtr.get_center()) >= 200) {
     qtr.Update();
     motor1.run(-100);
     motor2.run(-100);
@@ -264,25 +265,25 @@ void turn_left_to_black()
 void turn_right_to_black()
 {
   /*while (!color_detect_black())
-  {
+    {
     motor1.run(100);
     motor2.run(100);
-  }
-  while(color_detect_black()){
+    }
+    while(color_detect_black()){
     motor1.run(100);
     motor2.run(100);
-  }
-  while(!color_detect_black()){
+    }
+    while(!color_detect_black()){
     motor1.run(-90);
     motor2.run(-90);
-  }*/
+    }*/
   qtr.Update();
-  while(!(majority_linedetect() >= 2)){
+  while (!(majority_linedetect() >= 2)) {
     qtr.Update();
     motor1.run(100);
     motor2.run(100);
   }
-  while(abs(qtr.get_center()) >= 200){
+  while (abs(qtr.get_center()) >= 200) {
     qtr.Update();
     motor1.run(100);
     motor2.run(100);
@@ -297,7 +298,7 @@ void right90(bool, int additional);
 void left90(bool skip = false, int additional = 0)
 {
   //log_println("left90");
-  
+
   motor2.resetTicks();
   const int ticks_forward = 200;
   while (motor2.getTicks() <= ticks_forward && linedetect() && !skip)
@@ -307,7 +308,7 @@ void left90(bool skip = false, int additional = 0)
     // Serial.println(linedetect());
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
-   if(left && right){
+    if (left && right) {
       return;
     }
     else if (right)
@@ -324,12 +325,12 @@ void left90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(100);
   qtr.Update();
-  if(linedetect())
+  if (linedetect())
     return;
   utils::resetTicks();
   utils::forwardTicks(100, 50);
   turn_left_to_black();
-  utils::forwardTicks(-100,50); 
+  utils::forwardTicks(-100, 50);
 }
 
 void right90(bool skip = false, int additional = 0)
@@ -343,7 +344,7 @@ void right90(bool skip = false, int additional = 0)
     qtr.Update();
     bool left = false, right = false;
     check_lr_intersection(&left, &right);
-    if(left && right)
+    if (left && right)
       return;
     else if (left == true)
     {
@@ -358,10 +359,10 @@ void right90(bool skip = false, int additional = 0)
   utils::stopMotors();
   delay(100);
   qtr.Update();
-  if(linedetect())
+  if (linedetect())
     return;
   utils::resetTicks();
-  utils::forwardTicks(100,50);
+  utils::forwardTicks(100, 50);
   turn_right_to_black();
   utils::forwardTicks(-100, 50);
 }
@@ -372,15 +373,15 @@ int line_trace()
   int32_t line = qtr.get_line();
   line -= 3500;
   // hack to improve line tracing (not anymore)
- /* const float boost = 0.1f;
-  if (abs(line) > 2500)
-  {
-    kp = boost;
-  }
-  else
-  {
-    kp = kp_orig;
-  }*/
+  /* const float boost = 0.1f;
+    if (abs(line) > 2500)
+    {
+     kp = boost;
+    }
+    else
+    {
+     kp = kp_orig;
+    }*/
   int error = (kp * line);
 #ifndef LINEOFF
   motor1.run(-base_speed + error + ((error - prev_error) * kd));
@@ -401,7 +402,7 @@ void trace_line()
   lcd.print(right);
   // Serial.println(error-prev_error);
   prev_error = error;
-  if(right && left){
+  if (right && left) {
     utils::forwardTicks(100, 100);
   }
   else if (right == true)
@@ -411,7 +412,7 @@ void trace_line()
   }
   else if (left == true)
   {
-    utils::stopMotors();    
+    utils::stopMotors();
     left90();
   }
   lcd.clear();
@@ -436,8 +437,8 @@ uint8_t green_detect()
   tcs.getRGB(&r, &g, &b);
   //tcs.setInterrupt(!false);
   bool gleft = false, gright = false;
-  Serial.println(g/b * 10);
-  if ((g/b) * 10 >= 11)
+  Serial.println(g / b * 10);
+  if ((g / b) * 10 >= 11)
   {
     gleft = true;
   }
@@ -447,8 +448,8 @@ uint8_t green_detect()
   tcs.getRGB(&r, &g, &b);
   //tcs.setInterrupt(true);
   //print_color(r, g, b);
-  Serial.println(g/b * 10);
-  if ((g/b) * 10 >= 11)
+  Serial.println(g / b * 10);
+  if ((g / b) * 10 >= 11)
   {
     gright = true;
   }
@@ -492,15 +493,15 @@ void green90l()
   utils::stopMotors();
   delay(200);
   utils::resetTicks();
- // while(motor1.getTicks() <= 40){
+  // while(motor1.getTicks() <= 40){
   //    utils::forward(-100);
   //}
-  utils::forwardTicks(100,50);
+  utils::forwardTicks(100, 50);
   utils::stopMotors();
   delay(60);
   left(60, 100);
   turn_left_to_black();
-  utils::forwardTicks(-100,50);
+  utils::forwardTicks(-100, 50);
 }
 
 void green90r()
@@ -540,12 +541,12 @@ void green90r()
   //while(motor1.getTicks() <= 40){
   //  utils::forward(-100);
   //}
-  utils::forwardTicks(100,50);
+  utils::forwardTicks(100, 50);
   utils::stopMotors();
   delay(60);
   right(60, 100);
   turn_right_to_black();
-  utils::forwardTicks(-100,50);
+  utils::forwardTicks(-100, 50);
 }
 
 void green180()
@@ -610,7 +611,204 @@ bool front_green() {
 #endif
 }
 
+bool forward_green() {
 
+  utils::resetTicks();
+
+  while (motor1.getTicks() < 200 || front_green())
+    utils::forward(100);
+
+  if (front_green())
+    return true;
+  else {
+    while (motor1.getTicks() > 0)
+      utils::forward(-100);
+    return false;
+  }
+#ifdef FAKE_ROBOT
+  return false;
+#endif
+}
+
+void findPosition(int* triangle_pos, int* room_orient) {
+  int triangle_orient;
+
+  utils::resetTicks();
+
+
+  while (!checkWall(5, 300) || front_green()) {
+    Serial.print("Checkwall: ");
+    Serial.println(!checkWall(5, 300));
+    utils::forward(100);
+  }
+
+
+  utils::stopMotors();
+  delay(1100);
+
+
+#ifndef FAKE_ROBOT
+  *room_orient = triangleDETECT();
+#endif
+#ifdef FAKE_ROBOT
+  *room_orient = triangleDETECT2();
+#endif
+
+
+  /*
+    while(motor1.getTicks() < -250)
+    utils::forward(-100);*/
+
+
+
+  while (motor1.getTicks() < -100)
+    utils::forward(-100);
+
+
+  if (*room_orient) {
+    *triangle_pos = 1;
+    return;
+  }
+
+  *room_orient = 2;
+  left(90, 150);
+
+  if (checkWall(5, 200)) {
+    right(180, 150);
+    *room_orient = 1;
+  }
+  /*
+    utils::resetTicks();
+    while(!checkWall(5, 120))
+    utils::forward(100);*/
+
+  utils::resetTicks();
+
+  while (!checkWall(5, 300) || front_green())
+    utils::forward(100);
+
+
+  utils::stopMotors();
+  delay(1000);
+
+#ifndef FAKE_ROBOT
+  triangle_orient = triangleDETECT();
+#endif
+#ifdef FAKE_ROBOT
+  triangle_orient = triangleDETECT2();
+#endif
+
+
+  while (motor1.getTicks() < -100)
+    utils::forward(-100);
+
+  utils::stopMotors();
+  delay(1000);
+
+  /*
+    while(motor1.getTicks() > 0)
+      utils::forward(-100);
+  */
+
+  if (triangle_orient) {
+    *triangle_pos = 2;
+    *room_orient = triangle_orient;
+    return;
+  }
+  else {
+    *triangle_pos = 3;
+    return;
+  }
+
+
+}
+
+bool leave_room(int sensor, int dist) {
+
+  if (!checkWall(sensor, dist)) {
+    if (forward_green())
+      return true;
+  }
+
+  right(90, 150);
+
+  if (!checkWall(sensor, dist)) {
+    if ( forward_green())
+      return true;
+  }
+
+  right(180, 150);
+
+  return false;
+}
+
+
+bool checkWall(int sensor, int dist) {
+
+  int tof_dist;
+  // the scoop tof is located at 0
+  // the other tofs are at 5, 6
+  tcaselect(sensor);
+  tof_dist = tof.readRangeContinuousMillimeters();
+
+  return tof_dist <= dist;
+
+
+}
+
+bool checkExit(int sensor, int dist, int room_orientation) {
+
+  bool initial_wall;
+
+  initial_wall == checkWall(sensor, dist);
+
+  if (room_orientation == 1)
+    left(90, 150);
+  else
+    right(90, 150);
+
+  return !checkWall(sensor, dist) || !initial_wall;
+
+}
+
+int triangleDETECT() {
+
+#ifndef FAKE_ROBOT
+  int tofright, tofleft, keydifference;
+
+  tcaselect(5);
+  tofright = tof.readRangeContinuousMillimeters();
+  tcaselect(6);
+  tofleft = tof.readRangeContinuousMillimeters();
+
+  Serial.print(tofleft);
+  Serial.print("\t");
+  Serial.println(tofright);
+
+  keydifference = tofright - tofleft;   //WARNING: THIS IS A GUESS
+
+  Serial.println(keydifference);
+  if (keydifference >= 40) {
+
+    Serial.println("triangle2");
+    return (2);
+
+  }
+  else if (keydifference <= -40) {
+
+    Serial.println("triangle1");
+    return (1);
+
+  }
+  else {
+    Serial.println("flat wall");
+    return (0);
+  }
+#endif
+#ifdef FAKE_ROBOT
+  return 1;
+#endif
+}
 
 
 void setup()
@@ -625,8 +823,9 @@ void setup()
   //  qtr.calibrate(func);
   // for(int i = 0; i < SensorCount; i++)
   // Serial.println(qtr.getOffValues()[i]);
-  qtr.addOffValues((const int[]){
-      -37, 47, 47, 47, 47, 7, -37, -121});
+  qtr.addOffValues((const int[]) {
+    -37, 47, 47, 47, 47, 7, -37, -121
+  });
   lcd.init();
   lcd.backlight();
   lcd.setCursor(3, 0);
@@ -645,7 +844,7 @@ void setup()
   tof.setTimeout(500);
   tof.init();
   tof.startContinuous();
-  
+
   tcaselect(2);
   if (!tcs.begin())
   {
@@ -656,11 +855,11 @@ void setup()
   {
     Serial.println("error!");
   }
- // tcaselect(4);
- // if (!tcs.begin())
- // {
- //   Serial.println("error!");
- // }
+  // tcaselect(4);
+  // if (!tcs.begin())
+  // {
+  //   Serial.println("error!");
+  // }
   utils::setMotors(&motor1, &motor2);
 }
 
@@ -677,165 +876,588 @@ int silver_persistance = 0;
 
 void loop()
 {
-if(!evac_zone){
-  uint16_t r1,g1,b1,r2,g2,b2, c1 = 0, c2 = 0;
-//print_raw_color(r1,g1,b1,c1);
-tcaselect(2);
-tcs.getRawData(&r1, &g1, &b1, &c1);
-tcaselect(3);
-tcs.getRawData(&r2, &g2, &b2, &c2);
-//print_raw_color(r2, g2, b2, c2);
-//Serial.print("qtr[4]: ");
-//Serial.println(qtr[4]);
-//print_raw_color(r2,g2,b2,c2);
-Serial.print("r/g:");
-Serial.println((r2/(float)g2) * 10);
-//Serial.print(" c:");
-//Serial.print(c2);
-if(c2 >=  950 && (r2/(float)g2) * 10 >= 10.5){
+  if (!evac_zone) {
+    uint16_t r1, g1, b1, r2, g2, b2, c1 = 0, c2 = 0;
+    //print_raw_color(r1,g1,b1,c1);
+    tcaselect(2);
+    tcs.getRawData(&r1, &g1, &b1, &c1);
+    tcaselect(3);
+    tcs.getRawData(&r2, &g2, &b2, &c2);
+    //print_raw_color(r2, g2, b2, c2);
+    //Serial.print("qtr[4]: ");
+    //Serial.println(qtr[4]);
+    //print_raw_color(r2,g2,b2,c2);
+    Serial.print("r/g:");
+    Serial.println((r2 / (float)g2) * 10);
+    //Serial.print(" c:");
+    //Serial.print(c2);
+    if (c2 >=  950 && (r2 / (float)g2) * 10 >= 10.5) {
 
-  silver_persistance++;
-  log_println("silver");
-}
-else{
-  silver_persistance = 0;
-}
+      silver_persistance++;
+      log_println("silver");
+    }
+    else {
+      silver_persistance = 0;
+    }
 
-if(silver_persistance >= 2){
-    utils::stopMotors();
-    evac_zone = true;
-    return;
-}
-  float distance;
-  const float Kp_obs = 3.5; // nice naming
-  bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+    if (silver_persistance >= 2) {
+      utils::stopMotors();
+      evac_zone = true;
+      return;
+    }
+    float distance;
+    const float Kp_obs = 3.5; // nice naming
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
 
-  qtr.Update(); 
-  trace_line();
+    qtr.Update();
+    trace_line();
 
-  //for (int i = 0; i < SensorCount; i++)
-  //{
-  //  log_print(qtr[i]);
-  //  log_print('\t');
-  //}
-  log_println();
-  //tcaselect(1);
-  #ifndef MOTORSOFF
-  distance = getDistCm() + 14;
-  //log_println(distance);
-  #else
-  distance = 50;
-  #endif
-  float org_dist = distance;
-  if(distance < 25){
-    left(90,120);
-    delay(500);
-    log_print("dist after turn: ");
+    //for (int i = 0; i < SensorCount; i++)
+    //{
+    //  log_print(qtr[i]);
+    //  log_print('\t');
+    //}
+    log_println();
+    //tcaselect(1);
+#ifndef MOTORSOFF
     distance = getDistCm() + 14;
-    log_println(distance);
-    if(distance < 30){
-      left(180,100);
+    //log_println(distance);
+#else
+    distance = 50;
+#endif
+    float org_dist = distance;
+    if (distance < 25) {
+      left(90, 120);
       delay(500);
-      utils::forward(70);
+      log_print("dist after turn: ");
+      distance = getDistCm() + 14;
+      log_println(distance);
+      if (distance < 30) {
+        left(180, 100);
+        delay(500);
+        utils::forward(70);
 
-      motor2.run(100 - org_dist * Kp_obs);
-      motor1.run(-100 - org_dist * Kp_obs);
-      delay(2500);
-      
-      qtr.Update();
-      while(majority_linedetect() < 3){
         motor2.run(100 - org_dist * Kp_obs);
         motor1.run(-100 - org_dist * Kp_obs);
+        delay(2500);
+
         qtr.Update();
+        while (majority_linedetect() < 3) {
+          motor2.run(100 - org_dist * Kp_obs);
+          motor1.run(-100 - org_dist * Kp_obs);
+          qtr.Update();
+        }
+        utils::stopMotors();
+        delay(100);
+        utils::forwardTicks(100, 125);
+        right(50, 100);
+        turn_right_to_black();
       }
-      utils::stopMotors();
-      delay(100);
-      utils::forwardTicks(100,125);
-      right(50,100);
-      turn_right_to_black();
-    }
-    else{
-      utils::forward(70);
+      else {
+        utils::forward(70);
 
-      motor2.run(100 + org_dist * Kp_obs);
-      motor1.run(-100 + org_dist * Kp_obs);
-      delay(2500);
-
-      qtr.Update();
-      while(majority_linedetect() < 3){
         motor2.run(100 + org_dist * Kp_obs);
         motor1.run(-100 + org_dist * Kp_obs);
+        delay(2500);
+
         qtr.Update();
+        while (majority_linedetect() < 3) {
+          motor2.run(100 + org_dist * Kp_obs);
+          motor1.run(-100 + org_dist * Kp_obs);
+          qtr.Update();
+        }
+        utils::stopMotors();
+        delay(100);
+        utils::forwardTicks(100, 125);
+        left(50, 100);
+        turn_left_to_black();
       }
-      utils::stopMotors();
-      delay(100);
-      utils::forwardTicks(100,125);
-      left(50,100);
-      turn_left_to_black();
     }
-  }
 
-  tcaselect(2);
-  float r, g, b;
-  //tcs.setInterrupt(false);
-  tcs.getRGB(&r, &g, &b);
-  //Serial.print("g/b:");
-  //Serial.println((g/b) * 10);
-  //print_color(r, g, b);
-  //tcs.setInterrupt(true);
-  bool gleft = false, gright = false;
-  Serial.println(green_detect(), HEX);
-  if (green_detect() & 0x0F > 0)
-  {
-    #ifndef MOTORSOFF
-    gleft = true;
-    #else
-    //log_println("green");
-    #endif
-  }
-  
+    tcaselect(2);
+    float r, g, b;
+    //tcs.setInterrupt(false);
+    tcs.getRGB(&r, &g, &b);
+    //Serial.print("g/b:");
+    //Serial.println((g/b) * 10);
+    //print_color(r, g, b);
+    //tcs.setInterrupt(true);
+    bool gleft = false, gright = false;
+    Serial.println(green_detect(), HEX);
+    if (green_detect() == 0x0F || green_detect() == 0xFF)
+    {
+#ifndef MOTORSOFF
+      gleft = true;
+#else
+      //log_println("green");
+#endif
+    }
 
-  tcaselect(3);
-  //tcs.setInterrupt(false);
-  tcs.getRGB(&r, &g, &b);
-  //tcs.setInterrupt(true);
-  //print_color(r, g, b);
-  //Serial.print("g2/b2:");
-  //Serial.println((g/b) * 10);
-  if (green_detect() & 0xF0 > 0)
-  {
-    #ifndef MOTORSOFF
-    gright = true;
-    #else
-    //log_println("green");
-    #endif
-  }
 
-  if (gleft && gright)
-  {
-    // turn around
-    green180();
-  }
-  else if (gleft)
-  {
-    green90l();
-  }
-  else if (gright)
-  {
-    green90r();
-  }
+    tcaselect(3);
+    //tcs.setInterrupt(false);
+    tcs.getRGB(&r, &g, &b);
+    //tcs.setInterrupt(true);
+    //print_color(r, g, b);
+    //Serial.print("g2/b2:");
+    //Serial.println((g/b) * 10);
+    if (green_detect() == 0xF0 || green_detect() == 0xFF)
+    {
+#ifndef MOTORSOFF
+      gright = true;
+#else
+      //log_println("green");
+#endif
+    }
 
-/*
-if((r2 + g2 + b2) >= 1380 && (r1 + g1 + b1) >= 1380){
-  log_println("silver");
-  evac_zone = true;
-  utils::stopMotors();
-  return;
-}*/
-}
-else{
-  
-  
-}
- // color_detect_black();
+    if (gleft && gright)
+    {
+      // turn around
+      green180();
+    }
+    else if (gleft)
+    {
+      green90l();
+    }
+    else if (gright)
+    {
+      green90r();
+    }
+
+    /*
+      if((r2 + g2 + b2) >= 1380 && (r1 + g1 + b1) >= 1380){
+      log_println("silver");
+      evac_zone = true;
+      utils::stopMotors();
+      return;
+      }*/
+  }
+  else {
+
+    float distance;
+    float Kp_obs = 3.5;
+    int pos;
+    int room_orientation;
+    int leave = 0;
+    int exit_tile;
+    float old_orient;
+    float new_orient;
+    float comparison;
+    bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+
+
+
+
+    qtr.Update();
+
+    Serial.println("Silver detected");
+    findPosition(&pos, &room_orientation);
+    Serial.println(pos);
+    Serial.print("room_orientation:\t");
+    Serial.println(room_orientation);
+    Lower(1750); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
+
+
+    if (room_orientation == 1) {
+
+      int count  = 0;
+
+      left(90, 150);
+
+      while (!checkWall(0, 150) || front_green())
+        utils::forward(100);
+
+      driveDist(300, 100);
+      delay(1000);
+      driveDist(100, -100);
+
+      if (checkExit(0, 150, room_orientation)) {
+        if (pos == 1)
+          exit_tile == 2;
+        else
+          exit_tile == 1;
+      }
+      else {
+        exit_tile == 3;
+      }
+
+      delay(1000);
+      right(180, 150);
+      driveDist(250, 100);
+      right(90, 150);
+
+      while (!leave) {
+
+        //old_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+        while (!checkWall(0, 250)) {
+          utils::forward(100);
+        }
+        utils::stopMotors();
+        delay(1000);
+        /*
+          new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+          if (old_orient - new_orient >= 180)
+          new_orient += 360;
+          else if( new_orient - old_orient >= 180)
+          old_orient += 360;
+
+          if (abs(old_orient - new_orient) > 40)
+          while(true);
+        */
+        //tried but failed to use the BNO to detect the triangle. Unfortunately, the treads were too good at climbing into the triangle without changing orientation lmao
+
+        if (count % 2) {
+
+          Raise(550);
+
+#ifndef FAKE_ROBOT
+          leave = triangleDETECT();
+#endif
+
+#ifdef FAKE_ROBOT
+          leave = triangleDETECT3();
+#endif
+
+
+          Lower(550);
+
+          if (!leave) {
+
+            driveDist(300, 100);
+            delay(1000);
+            driveDist(150, -100);
+            right(90, 150);
+            driveDist(120, 100);
+            right(90, 150);
+
+          }
+
+
+
+        }
+        else {
+
+          Raise(550);
+
+#ifndef FAKE_ROBOT
+          leave = triangleDETECT();
+#endif
+
+#ifdef FAKE_ROBOT
+          leave = triangleDETECT3();
+#endif
+
+          Lower(550);
+
+          if (!leave) {
+
+            driveDist(300, 100);
+            delay(1000);
+            driveDist(150, -100);
+            left(90, 150);
+            driveDist(150, 100);
+            left(90, 150);
+
+
+          }
+
+
+        }
+        count++;
+      }
+
+      delay(1000);
+      Raise(550);
+#ifndef FAKE_ROBOT
+
+      while (!checkWall(5, 150) && !checkWall(6, 150))
+        utils::forward(100);
+#endif
+
+#ifdef FAKE_ROBOT
+      while (!checkWall(0, 150))
+        utils::forward(100);
+#endif
+
+      if (leave == 1)
+        left(135, 150);
+      else
+        right(135, 150);
+
+
+      utils::stopMotors();
+      delay(1000);
+
+
+
+      driveDist(100, -100);
+
+      utils::stopMotors();
+      delay(1000);
+
+      Raise(1200);
+
+      utils::stopMotors();
+      delay(1000);
+
+      right(45, 150);
+
+      for (int i = 0; i < 3; i++) {
+        while (!checkWall(5, 300) || front_green())
+          utils::forward(100);
+
+        utils::stopMotors();
+        delay(1000);
+
+#ifndef FAKE_ROBOT
+
+        if (leave_room(5, 300))
+          break;
+#endif
+
+#ifdef FAKE_ROBOT
+
+        if (leave_room(0, 300))
+          break;
+#endif
+      }
+
+
+    }
+    else if (room_orientation == 2) {
+
+      int count  = 0;
+
+      right(90, 150);
+
+      while (!checkWall(0, 150) || front_green())
+        utils::forward(100);
+
+      driveDist(300, 100);
+      delay(1000);
+      driveDist(100, -100);
+
+      if (checkExit(0, 150, room_orientation)) {
+        if (pos == 1)
+          exit_tile == 2;
+        else
+          exit_tile == 1;
+      }
+      else {
+        exit_tile == 3;
+      }
+
+      delay(1000);
+      left(180, 150);
+      driveDist(250, 100);
+      left(90, 150);
+
+
+      while (!leave) {
+
+
+        //old_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+        while (!checkWall(0, 250)) {
+          utils::forward(100);
+        }
+        utils::stopMotors();
+        delay(1000);
+
+        /*new_orient = bno.getEvent(&orientationData, Adafruit_BNO055::VECTOR_EULER);
+
+
+          if (old_orient - new_orient >= 180)
+          new_orient += 360;
+          else if( new_orient - old_orient >= 180)
+          old_orient += 360;
+
+          if (abs(old_orient - new_orient) > 40)
+          while(true);
+        */
+
+
+        if (!(count % 2)) {
+
+          Raise(550);
+
+#ifndef FAKE_ROBOT
+          leave = triangleDETECT();
+#endif
+
+#ifdef FAKE_ROBOT
+          leave = triangleDETECT3();
+#endif
+
+
+          Lower(550);
+
+          if (!leave) {
+            driveDist(300, 100);
+            delay(1000);
+            driveDist(150, -100);
+            right(90, 150);
+            driveDist(150, 100);
+            right(90, 150);
+          }
+
+        }
+        else {
+
+          Raise(550);
+
+#ifndef FAKE_ROBOT
+          leave = triangleDETECT();
+#endif
+
+#ifdef FAKE_ROBOT
+          leave = triangleDETECT3();
+#endif
+
+          Lower(550);
+
+          if (!leave) {
+
+            driveDist(300, 100);
+            delay(1000);
+            driveDist(150, -100);  //needs to ram the ball in
+            left(90, 150);
+            driveDist(150, 100);
+            left(90, 150);
+
+          }
+
+
+        }
+        count++;
+      }
+
+      delay(1000);
+      Raise(550);
+#ifndef FAKE_ROBOT
+
+      while (!checkWall(5, 150) && !checkWall(6, 150))
+        utils::forward(100);
+#endif
+
+#ifdef FAKE_ROBOT
+      while (!checkWall(0, 150))
+        utils::forward(100);
+#endif
+
+      if (leave == 1)
+        left(135, 150);
+      else
+        right(135, 150);
+
+      Raise(1200);
+
+      right(45, 150);
+
+      for (int i = 0; i < 3; i++) {
+        while (!checkWall(5, 300) || front_green())
+          utils::forward(100);
+
+        utils::stopMotors();
+        delay(1000);
+
+#ifndef FAKE_ROBOT
+        if (leave_room(5, 300))
+          break;
+#endif
+
+#ifdef FAKE_ROBOT
+
+        if (leave_room(0, 300))
+          break;
+#endif
+      }
+
+
+
+    }
+    //basically
+    /*
+      Raise(1350); //half way raise
+      if (triangleDETECT() != 0) {
+      left(90, 150);
+      if (checkWall(5, 30)) {
+        right(90, 150);
+        right(45, 150);
+        driveDist(250, 100);
+        right(45, 150);
+        Raise(1350);
+
+      }
+      else {
+        right(90, 150);
+        left(45, 150);
+        driveDist(250, 100);
+        left(45, 150);
+        Raise(1350);
+
+      }
+
+      }
+      else {
+      left(90, 150);
+      if (triangleDETECT() == 1) {
+        right(180, 150);
+        while (!checkWall(5, 100))
+          utils::forward(100);
+        left(180, 150); // turns left because we wouldn't want the scoop to hit the wall while half way downw. thought of this after writing it
+        Raise(1350);
+
+      }
+      else {
+        right(180, 150);
+        while (!checkWall(6, 100))
+          utils::forward(100);
+        right(180, 150);
+        Raise(1350);
+
+      }
+      }
+      //ryan - honestly idk if my shit makes any sense but basically it orients the robot the exact same each time it drops teh balls now, which might be useful in the situation of finding the exit
+
+      float future = orientationData.orientation.x + 180.0 < 360.0 ? orientationData.orientation.x : orientationData.orientation.x - 180.0;
+
+      while (orientationData.orientation.x < future) {
+      while (!checkWall(5, 1200)) {
+        motor1.run(150);
+        motor2.run(150);
+      }
+
+      do {
+        utils::resetTicks();
+        utils::forward(100);
+
+      } while (silver_linedetect() > 6 && front_green());
+
+      if (front_green()) {
+        break;
+      }
+
+      while (motor1.getTicks() > 0) {
+        utils::forward(-100);
+      }
+
+
+      }*/
+
+    utils::stopMotors();
+    delay(1000);
+    driveDist(50, 100);
+    evac_zone == false;
+
+
+  }
+  // color_detect_black();
 }
