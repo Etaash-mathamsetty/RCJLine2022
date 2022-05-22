@@ -76,7 +76,7 @@ float getDistCm() {
 
 bool linedetect()
 {
-  const float thresh = 700;
+  const float thresh = 650;
   bool detect = false;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -91,7 +91,7 @@ bool linedetect()
 
 int majority_linedetect()
 {
-  const float thresh = 700;
+  const float thresh = 650;
   int line = 0;
   for (int i = 0; i < SensorCount; i++)
   {
@@ -104,7 +104,7 @@ int majority_linedetect()
 }
 
 bool center_linedetect() {
-  const float tresh = 700;
+  const float tresh = 650;
   for (int i = 3; i <= 4; i++) {
     if (qtr[i] > tresh) {
       return true;
@@ -112,7 +112,7 @@ bool center_linedetect() {
   }
 }
 
-void right(int angle, int speed, int subtract_ang = 0)
+void right(int angle, int speed, int subtract_ang = 2)
 {
   float orient = 0;
   angle -= subtract_ang;
@@ -147,7 +147,7 @@ void right(int angle, int speed, int subtract_ang = 0)
   utils::stopMotors();
 }
 
-void left(int angle, int speed, int subtract_ang = 0)
+void left(int angle, int speed, int subtract_ang = 2)
 {
   float orientation = 0;
   angle -= subtract_ang;
@@ -365,6 +365,7 @@ void right90(bool skip = false, int additional = 0)
   utils::forwardTicks(100, 50);
   turn_right_to_black();
   utils::forwardTicks(-100, 50);
+
 }
 
 int line_trace()
@@ -429,6 +430,22 @@ void lcd_display_qtr()
   // delay(150);
 }
 
+bool black_detect(){
+  tcaselect(2);
+  uint16_t r,g,b,c;
+  tcs.getRawData(&r,&g, &b, &c);
+  print_raw_color(r,g,b,c);
+  if(c < 900)
+    return true;
+  tcaselect(3);
+  //uint16_t r,g,b,c;
+  tcs.getRawData(&r,&g, &b, &c);
+  print_raw_color(r,g,b,c);
+  if(c < 900)
+    return true;
+  return false;
+}
+
 uint8_t green_detect()
 {
   tcaselect(2);
@@ -437,9 +454,12 @@ uint8_t green_detect()
   tcs.getRGB(&r, &g, &b);
   //tcs.setInterrupt(!false);
   bool gleft = false, gright = false;
-  Serial.println(g / b * 10);
-  if ((g / b) * 10 >= 11)
+  //Serial.println(g / b * 10);
+  //Serial.print("r1:");
+  //Serial.println(r);
+  if ((g / b) * 10 >= 11.2)
   {
+    log_println("green");
     gleft = true;
   }
   //print_color(r, g, b);
@@ -448,10 +468,13 @@ uint8_t green_detect()
   tcs.getRGB(&r, &g, &b);
   //tcs.setInterrupt(true);
   //print_color(r, g, b);
-  Serial.println(g / b * 10);
-  if ((g / b) * 10 >= 11)
+  //Serial.println(g / b * 10);
+  //Serial.print("r2:");
+  //Serial.println(r);
+  if ((g / b) * 10 >= 11.2)
   {
     gright = true;
+    log_println("green");
   }
 
   return (uint8_t(gleft * UINT8_MAX) & 0x0F) | (uint8_t(gright * UINT8_MAX) & 0xF0);
@@ -461,13 +484,14 @@ void green180();
 
 void green90l()
 {
-  motor2.resetTicks();
+  utils::resetTicks();
   // forward
   uint8_t double_green = 0;
   bool pls_return = false;
-  while (motor2.getTicks() <= 5)
+  while (motor2.getTicks() <= 55)
   {
     utils::forward(80);
+
     qtr.Update();
     //log_println(majority_linedetect());
     double_green = green_detect();
@@ -476,20 +500,24 @@ void green90l()
       green180();
       return;
     }
-    if (majority_linedetect() >= 4)
+
+    if (!black_detect())
     {
+      //utils::forwardTicks(100, 20);
       pls_return = true;
     }
   }
-
-  while (motor2.getTicks() <= 150)
-  {
-    utils::forward(100);
-  }
+  utils::stopMotors();
+    delay(1000);
   if (pls_return)
   {
     return;
   }
+  while (motor2.getTicks() <= 130)
+  {
+    utils::forward(100);
+  }
+
   utils::stopMotors();
   delay(200);
   utils::resetTicks();
@@ -506,11 +534,11 @@ void green90l()
 
 void green90r()
 {
-  motor2.resetTicks();
+  utils::resetTicks();
   // forward
   uint8_t double_green = 0;
   bool pls_return = false;
-  while (motor2.getTicks() <= 5)
+  while (motor2.getTicks() <= 55)
   {
     utils::forward(80);
     qtr.Update();
@@ -521,20 +549,23 @@ void green90r()
       green180();
       return;
     }
-    if (majority_linedetect() >= 4)
+    
+    if (!black_detect())
     {
+      //utils::forwardTicks(100, 20);
       pls_return = true;
     }
   }
 
-  while (motor2.getTicks() <= 150)
-  {
-    utils::forward(100);
-  }
   if (pls_return)
   {
     return;
   }
+  while (motor2.getTicks() <= 130)
+  {
+    utils::forward(100);
+  }
+
   utils::stopMotors();
   delay(200);
   utils::resetTicks();
@@ -558,15 +589,7 @@ void green180()
 
 void driveDist(int encoders, int speed, int reset = true)
 {
-  if (reset)
-    utils::resetTicks();
-
-  while (abs(motor1.getTicks()) < abs(encoders) && abs(motor2.getTicks()) < abs(encoders)) {
-    utils::forward(speed);
-  }
-
-  utils::stopMotors();
-  return;
+  utils::forwardTicks(speed, encoders, reset);
 }
 
 void Raise(int target)
@@ -577,7 +600,7 @@ void Raise(int target)
   int start = motor3.getTicks();
   while (abs(motor3.getTicks() - start) < target) {
 
-    motor3.run(-200);
+    motor3.run(-250);
 
   }
   motor3.stop();
@@ -661,7 +684,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
 
 
-  while (motor1.getTicks() < -200)
+  while (motor1.getTicks() < -300)
     utils::forward(-100);
 
   utils::stopMotors();
@@ -669,17 +692,19 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
 
   if (*room_orient) {
+    *room_orient = 2;
     *triangle_pos = 1;
     return;
   }
 
-  *room_orient = 2;
-  left(90, 150);
-
+  
+  *room_orient = 1;
+  right(90, 150);
+/*
   if (checkWall(5, 200)) {
     right(180, 150);
     *room_orient = 1;
-  }
+  }*/
   /*
     utils::resetTicks();
     while(!checkWall(5, 120))
@@ -715,7 +740,7 @@ void findPosition(int* triangle_pos, int* room_orient) {
 
   if (triangle_orient) {
     *triangle_pos = 2;
-    *room_orient = triangle_orient;
+    *room_orient = 1;
     return;
   }
   else {
@@ -868,7 +893,24 @@ void setup()
   // }
   utils::setMotors(&motor1, &motor2);
 }
-
+void shake()
+{
+  for(int i = 0; i < 10; i++){
+  Lower(200);
+  Raise(200);  
+  }
+  for(int i = 0; i < 10; i++) 
+  { 
+  Lower(100); 
+  Raise(100); 
+  }
+  for(int n = 0; n < 10; n++){
+  Lower(50);
+  Raise(50);  
+  }
+  return; 
+  
+}
 void print_color(float r, float g, float b)
 {
   /*
@@ -902,9 +944,10 @@ bool stop = false;
 
 void loop()
 {
+
 /*
 if(stop){
-  utils::stopMotors();
+  utils::stopMotors();dzs
   return;
 }*/
 
@@ -922,6 +965,7 @@ if(stop){
     Serial.println("red");
     stop = true;
   }*/
+ // black_detect();
 
   if (!evac_zone) {
     uint16_t r1, g1, b1, r2, g2, b2, c1 = 0, c2 = 0;
@@ -1102,7 +1146,7 @@ if(stop){
     Serial.println(pos);
     Serial.print("room_orientation:\t");
     Serial.println(room_orientation);
-    Lower(1450); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
+    Lower(1750); //scoop is going to be raised while finding the triangle so we need to put it down while we go for the ball
 
 
     if (room_orientation == 1) {
@@ -1246,8 +1290,9 @@ if(stop){
       utils::stopMotors();
       delay(1000);
 
-      Raise(1200);
-
+      Raise(1400);
+      for(int i = 0; i < 3; i++)
+        shake(); 
       while(true){
         utils::stopMotors();
         delay(1000);
@@ -1410,7 +1455,9 @@ if(stop){
       else
         right(135, 150);
 
-      Raise(1200);
+      Raise(1400);
+      for( int i = 0; i < 3; i++)
+        shake();
 
       while(true){
         utils::stopMotors();
@@ -1435,7 +1482,7 @@ if(stop){
 
         if (leave_room(0, 300))
           break;
-#endif
+#endif  
       }
 
 
