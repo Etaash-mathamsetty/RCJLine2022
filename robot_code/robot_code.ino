@@ -735,6 +735,9 @@ bool leave_room(int sensor, int dist) {
 
   right(90, 150);
 
+  utils::stopMotors();
+  delay(100);
+
   if (!checkWall(sensor, dist)) {
     if ( forward_green())
       return true;
@@ -868,6 +871,14 @@ void setup()
 
 void print_color(float r, float g, float b)
 {
+  /*
+  Serial.print(" R: ");
+  Serial.println(r);
+  Serial.print(" G: ");
+  Serial.println(g);
+  Serial.print(" B: ");
+  Serial.println(b);*/
+  
   log_print(r);
   log_print('\t');
   log_print(g);
@@ -875,10 +886,25 @@ void print_color(float r, float g, float b)
   log_println(b);
 }
 
+bool red_detect(){
+    float r1, g1, b1;
+    tcaselect(3);
+    tcs.getRGB(&r1, &g1, &b1);
+    print_color(r1, g1, b1);
+
+    return r1 >= 150 && g1 < 50 && b1 < 50;
+  
+}
+
 int silver_persistance = 0;
 
 void loop()
 {
+
+  while(red_detect()){
+    utils::stopMotors();
+    }
+  
   if (!evac_zone) {
     uint16_t r1, g1, b1, r2, g2, b2, c1 = 0, c2 = 0;
     //print_raw_color(r1,g1,b1,c1);
@@ -1210,7 +1236,7 @@ void loop()
       right(45, 150);
 
       for (int i = 0; i < 3; i++) {
-        while (!checkWall(5, 300) || front_green())
+        while (!checkWall(5, 200) || front_green())
           utils::forward(100);
 
         utils::stopMotors();
@@ -1363,7 +1389,7 @@ void loop()
       right(45, 150);
 
       for (int i = 0; i < 3; i++) {
-        while (!checkWall(5, 300) || front_green())
+        while (!checkWall(5, 200) || front_green())
           utils::forward(100);
 
         utils::stopMotors();
