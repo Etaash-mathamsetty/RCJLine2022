@@ -17,10 +17,13 @@ const motor_pins pi_motor_pins[4] = {{35,34,12,18},{36,37, 8,19},{42,43, 9,3},{A
 
 class Motor{
   public:
-  Motor(int port, bool attachEnc = true){
+  Motor(int port, bool attachEnc = true, bool reverse = false){
     this->port = port;
     if(attachEnc)
     attachEncoder();
+    mult = 1;
+    if(reverse)
+      mult *= -1;
     boost = 0;
   //  mticks = ticks[port];
 
@@ -61,14 +64,14 @@ class Motor{
     if(speed >= 0){
       digitalWrite(pi_motor_pins[port].h2, LOW);
       digitalWrite(pi_motor_pins[port].h1, HIGH);
-      analogWrite(pi_motor_pins[port].pwm, speed);
+      analogWrite(pi_motor_pins[port].pwm, speed * mult);
       dir[port] = true;
       
     }
     if(speed < 0){
       digitalWrite(pi_motor_pins[port].h1, LOW);
       digitalWrite(pi_motor_pins[port].h2, HIGH);
-      analogWrite(pi_motor_pins[port].pwm, -speed);
+      analogWrite(pi_motor_pins[port].pwm, -(speed * mult));
       dir[port] = false;
     }
     #endif
@@ -132,5 +135,6 @@ private:
   uint8_t boost;
   static inline int ticks[4] = {0};
   static inline bool dir[4] = {true};
+  int mult;
 };
 #endif
