@@ -58,20 +58,21 @@ class Motor{
 
 
   void _run(int speed){
-    #ifndef MOTORSOFF	  
-    speed = min(UINT8_MAX, speed);
+    #ifndef MOTORSOFF
+    speed *= mult;
+    speed = min(255, speed);
     speed = max(-255, speed);
     if(speed >= 0){
       digitalWrite(pi_motor_pins[port].h2, LOW);
       digitalWrite(pi_motor_pins[port].h1, HIGH);
-      analogWrite(pi_motor_pins[port].pwm, speed * mult);
+      analogWrite(pi_motor_pins[port].pwm, speed);
       dir[port] = true;
       
     }
     if(speed < 0){
       digitalWrite(pi_motor_pins[port].h1, LOW);
       digitalWrite(pi_motor_pins[port].h2, HIGH);
-      analogWrite(pi_motor_pins[port].pwm, -(speed * mult));
+      analogWrite(pi_motor_pins[port].pwm, -speed);
       dir[port] = false;
     }
     #endif
